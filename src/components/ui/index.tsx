@@ -1,0 +1,122 @@
+// Базовые UI-компоненты StarTime+.
+import type { ReactNode } from 'react'
+import { FlaskConical, ShieldAlert } from 'lucide-react'
+import type { AlertStatus, Severity } from '../../types'
+
+export function Card({ title, action, children, className = '' }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <section className={`panel p-4 sm:p-5 ${className}`}>
+      {(title || action) && (
+        <header className="mb-3 flex items-center justify-between gap-3">
+          {title && <h2 className="label-caps">{title}</h2>}
+          {action}
+        </header>
+      )}
+      {children}
+    </section>
+  )
+}
+
+const SEV: Record<Severity, string> = {
+  LOW: 'bg-low/15 text-low border-low/40',
+  MEDIUM: 'bg-medium/15 text-medium border-medium/40',
+  HIGH: 'bg-high/15 text-high border-high/40',
+  CRITICAL: 'bg-critical/15 text-critical border-critical/50',
+}
+export function SeverityBadge({ severity }: { severity: Severity }) {
+  return <span className={`inline-flex rounded-md border px-2 py-0.5 font-mono text-[11px] font-semibold ${SEV[severity]}`}>{severity}</span>
+}
+
+const STATUS: Record<AlertStatus, [string, string]> = {
+  active: ['Активно', 'text-high'],
+  acknowledged: ['Ознакомлен', 'text-medium'],
+  resolved: ['Закрыто', 'text-ok'],
+}
+export function StatusText({ status }: { status: AlertStatus }) {
+  const [label, cls] = STATUS[status]
+  return <span className={`text-xs font-medium ${cls}`}>● {label}</span>
+}
+
+/** Обязательная пометка демонстрационных данных. */
+export function SimBadge({ className = '' }: { className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md border border-accent-2/40 bg-accent-2/10 px-2 py-0.5 text-[11px] font-semibold text-accent-2 ${className}`}>
+      <FlaskConical size={12} aria-hidden /> Симуляция
+    </span>
+  )
+}
+
+export function Disclaimer() {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-medium/30 bg-medium/5 px-3 py-2 text-xs text-ink-dim">
+      <ShieldAlert size={16} className="mt-0.5 shrink-0 text-medium" aria-hidden />
+      <p>
+        StarTime+ — прототип для NASA Space Apps Challenge, <b className="text-ink">не сертифицированное медицинское устройство</b>. Он не ставит
+        диагнозы и не назначает лечение. Демонстрационные значения сгенерированы симулятором и не являются данными астронавтов или NASA.
+      </p>
+    </div>
+  )
+}
+
+export function Button({
+  children,
+  onClick,
+  variant = 'primary',
+  disabled,
+  type = 'button',
+  className = '',
+}: {
+  children: ReactNode
+  onClick?: () => void
+  variant?: 'primary' | 'ghost' | 'danger'
+  disabled?: boolean
+  type?: 'button' | 'submit'
+  className?: string
+}) {
+  const v = {
+    primary: 'bg-accent text-space-950 hover:bg-accent/90',
+    ghost: 'border border-space-600 text-ink hover:bg-space-800',
+    danger: 'border border-critical/50 text-critical hover:bg-critical/10',
+  }[variant]
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${v} ${className}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+export function Empty({ children }: { children: ReactNode }) {
+  return <div className="rounded-lg border border-dashed border-space-700 p-6 text-center text-sm text-ink-mute">{children}</div>
+}
+
+export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-ink-dim">{subtitle}</p>}
+      </div>
+      {right}
+    </div>
+  )
+}
+
+export function Stat({ label, value, unit, hint, color }: { label: string; value: string; unit?: string; hint?: ReactNode; color?: string }) {
+  return (
+    <div className="panel p-4">
+      <div className="label-caps">{label}</div>
+      <div className="mt-2 flex items-baseline gap-1.5">
+        <span className="font-mono text-3xl font-semibold" style={color ? { color } : undefined}>
+          {value}
+        </span>
+        {unit && <span className="text-sm text-ink-mute">{unit}</span>}
+      </div>
+      {hint && <div className="mt-1 text-xs text-ink-dim">{hint}</div>}
+    </div>
+  )
+}
