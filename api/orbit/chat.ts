@@ -86,7 +86,7 @@ async function healthContext(db: SupabaseClient, uid: string): Promise<string> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
+  const supabaseUrl = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)?.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
   const supabaseAnon = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY
   const aiKey = process.env.AI_API_KEY
   if (!supabaseUrl || !supabaseAnon) return json(500, { error: 'Сервер не настроен: нет SUPABASE_URL / SUPABASE_ANON_KEY' })

@@ -2,7 +2,8 @@
 // доступ к данным ограничивают политики RLS в базе. service_role здесь никогда не используется.
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
+// Допускаем URL как с /rest/v1/ на конце, так и без — клиенту нужен базовый адрес проекта
+const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
 /** null — если ключи не заданы: приложение работает в локальном демо-режиме. */
