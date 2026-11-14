@@ -1,70 +1,133 @@
-// ORBIT AI: чат с AI-помощником. Запросы идут на серверный endpoint /api/orbit/chat
-// (ключ AI хранится только на сервере). Ответы опираются на найденные фрагменты
-// документов NASA из базы знаний и показывают источники.
+// ORBIT AI · режим без внешнего AI API.
+// • Научные вопросы → поиск по базе знаний из реальных страниц NASA прямо в браузере;
+//   показываются оригинальные фрагменты (на английском) с номерами и ссылками на источники.
+// • «Объясни мои предупреждения» → объяснение по данным Risk Engine (правило, причина, шаг).
+// Ничего не выдумывается: если подходящего фрагмента нет — так и сообщается.
+// (Серверный endpoint с AI — api/orbit/chat.ts — подключается позже, когда будет ключ.)
 import { useEffect, useRef, useState } from 'react'
-import { Bot, ExternalLink, Send, User } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { BookOpen, Bot, ExternalLink, Send, User } from 'lucide-react'
 import { useData } from '../features/health/DataProvider'
 import { Card, PageHeader } from '../components/ui'
-import type { OrbitSource } from '../types'
+import { excerpt, KNOWLEDGE_STATS, search } from '../features/orbit-ai/knowledge'
+import { CATEGORY_LABELS } from '../features/health/metrics'
+import type { HealthAlert, OrbitSource } from '../types'
+import type { CategoryAssessment } from '../features/risk-detection/engine'
 
+interface Quote {
+  text: string
+  n: number
+}
 interface Msg {
   role: 'user' | 'assistant'
   content: string
+  quotes?: Quote[]
   sources?: OrbitSource[]
 }
 
 const SUGGESTIONS = [
   'Как микрогравитация влияет на кости и мышцы?',
   'Какие риски несёт космическое излучение?',
-  'Почему в длительной миссии важен сон?',
+  'Почему изоляция опасна для экипажа?',
+  'Что происходит со зрением в космосе?',
   'Объясни мои текущие предупреждения',
 ]
 
+const ALERT_INTENT = /предупрежд|мои показат|моё состоян|мое состоян|мои данные|алерт|alert|риск.* у меня/i
+const CATEGORY_QUERY: Record<string, string> = {
+  cardiovascular: 'heart cardiovascular blood',
+  respiratory: 'air carbon dioxide environment',
+  thermoregulation: 'environment habitat',
+  sleep: 'sleep isolation',
+  radiation: 'space radiation',
+  behavioral: 'behavioral isolation confinement',
+}
+
+function answerKnowledge(question: string): Msg {
+  const hits = search(question, 3)
+  if (!hits.length) {
+    return {
+      role: 'assistant',
+      content:
+        'В базе знаний NASA подходящих материалов по этому вопросу не найдено. Я не буду отвечать без подтверждающего источника. Попробуйте спросить о радиации, гравитации, костях и мышцах, изоляции, сне, зрении, удалённости от Земли или среде обитания.',
+      sources: [],
+    }
+  }
+  const sources: OrbitSource[] = []
+  const quotes = hits.map((h) => {
+    let n = sources.findIndex((s) => s.url === h.source.url) + 1
+    if (!n) {
+      sources.push(h.source)
+      n = sources.length
+    }
+    return { text: excerpt(h.text), n }
+  })
+  return {
+    role: 'assistant',
+    content: `Нашёл в официальных материалах NASA ${quotes.length} ${quotes.length === 1 ? 'релевантный фрагмент' : 'релевантных фрагмента'} (цитаты на языке оригинала):`,
+    quotes,
+    sources,
+  }
+}
+
+function answerAlerts(alerts: HealthAlert[], assessments: CategoryAssessment[]): Msg {
+  const open = alerts.filter((a) => a.status !== 'resolved')
+  if (!open.length) {
+    const ok = assessments.filter((a) => a.status === 'ok').map((a) => CATEGORY_LABELS[a.category])
+    return {
+      role: 'assistant',
+      content: `Сейчас открытых предупреждений нет.${ok.length ? ` В пределах вашей личной baseline: ${ok.join(', ')}.` : ''}\n\nЧтобы увидеть, как работает обнаружение изменений, откройте «Симулятор» → «Изменение тенденции».`,
+    }
+  }
+  const lines = open.map(
+    (a, i) =>
+      `${i + 1}. [${a.severity}] ${a.title}\n   Почему: ${a.description}\n   Правило: ${a.rule_id} (${a.ruleset_version}) · Качество данных: ${a.data_quality}\n   Следующий шаг: ${a.next_step}`,
+  )
+  // Научный контекст по категории самого приоритетного предупреждения
+  const top = [...open].sort((x, y) => 'LOW MEDIUM HIGH CRITICAL'.indexOf(y.severity) - 'LOW MEDIUM HIGH CRITICAL'.indexOf(x.severity))[0]
+  const ctx = CATEGORY_QUERY[top.category] ? search(CATEGORY_QUERY[top.category], 1) : []
+  return {
+    role: 'assistant',
+    content:
+      `Открытых предупреждений: ${open.length}. Это наблюдения относительно вашей личной baseline, а не диагнозы.\n\n${lines.join('\n\n')}\n\n` +
+      'При серьёзных изменениях обратитесь к медицинскому специалисту миссии и следуйте утверждённому протоколу.' +
+      (ctx.length ? `\n\nНаучный контекст по категории «${CATEGORY_LABELS[top.category]}»:` : ''),
+    quotes: ctx.map((h) => ({ text: excerpt(h.text, 420), n: 1 })),
+    sources: ctx.map((h) => h.source),
+  }
+}
+
 export default function OrbitAIPage() {
-  const { mode } = useData()
+  const { alerts, engine } = useData()
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
-  const [includeHealth, setIncludeHealth] = useState(true)
   const [pending, setPending] = useState(false)
-  const [conversationId, setConversationId] = useState<string | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, pending])
 
-  async function send(text: string) {
+  function send(text: string) {
     const q = text.trim()
     if (!q || pending) return
     setInput('')
-    const history = [...messages, { role: 'user' as const, content: q }]
-    setMessages(history)
+    setMessages((m) => [...m, { role: 'user', content: q }])
     setPending(true)
-    try {
-      const { data } = (await supabase?.auth.getSession()) ?? { data: { session: null } }
-      const res = await fetch('/api/orbit/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
-        body: JSON.stringify({ messages: history.map(({ role, content }) => ({ role, content })), conversationId, includeHealth }),
-      })
-      const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
-      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`)
-      setConversationId(body.conversationId ?? conversationId)
-      setMessages((m) => [...m, { role: 'assistant', content: body.answer, sources: body.sources }])
-    } catch (e) {
-      setMessages((m) => [...m, { role: 'assistant', content: `⚠️ AI сейчас недоступен: ${(e as Error).message}` }])
-    } finally {
+    // небольшая пауза, чтобы ответ не появлялся «мгновенно-рывком»
+    setTimeout(() => {
+      const reply = ALERT_INTENT.test(q) ? answerAlerts(alerts, engine?.assessments ?? []) : answerKnowledge(q)
+      setMessages((m) => [...m, reply])
       setPending(false)
-    }
+    }, 350)
   }
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] flex-col">
-      <PageHeader title="ORBIT AI" subtitle="Научный помощник: объясняет факторы космического полёта с опорой на документы NASA" />
-      {mode === 'demo' && (
-        <p className="mb-3 rounded-lg border border-medium/30 bg-medium/5 px-3 py-2 text-xs text-ink-dim">
-          В локальном демо-режиме AI недоступен: нужен вход через Supabase и серверный endpoint (после деплоя на Vercel или через <code>vercel dev</code>).
-        </p>
-      )}
+    <div className="flex h-[calc(100vh-9rem)] min-h-[520px] flex-col">
+      <PageHeader title="ORBIT AI" subtitle="Научный помощник: факторы космического полёта по материалам NASA и объяснение ваших предупреждений" />
+      <p className="mb-3 flex items-start gap-2 rounded-lg border border-accent/25 bg-accent/5 px-3 py-2 text-xs text-ink-dim">
+        <BookOpen size={15} className="mt-0.5 shrink-0 text-accent" />
+        <span>
+          Режим базы знаний: ответы — это оригинальные фрагменты {KNOWLEDGE_STATS.sources} официальных страниц NASA ({KNOWLEDGE_STATS.chunks} фрагментов) со ссылками на источники. Генеративный AI будет подключён на следующем этапе.
+        </span>
+      </p>
       <Card className="flex min-h-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1" aria-live="polite">
           {!messages.length && (
@@ -87,14 +150,23 @@ export default function OrbitAIPage() {
               <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${m.role === 'user' ? 'bg-space-700' : 'bg-accent/15 text-accent'}`}>
                 {m.role === 'user' ? <User size={15} /> : <Bot size={15} />}
               </div>
-              <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm ${m.role === 'user' ? 'bg-accent/12 text-ink' : 'bg-space-850 text-ink'}`}>
+              <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm ${m.role === 'user' ? 'bg-accent/12' : 'bg-space-850'}`}>
                 <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
+                {m.quotes && m.quotes.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {m.quotes.map((q, j) => (
+                      <blockquote key={j} lang="en" className="border-l-2 border-accent/60 pl-3 text-[13px] italic text-ink-dim">
+                        {q.text} <span className="not-italic font-mono text-accent">[{q.n}]</span>
+                      </blockquote>
+                    ))}
+                  </div>
+                )}
                 {m.sources && m.sources.length > 0 && (
                   <div className="mt-3 border-t border-space-700 pt-2">
                     <div className="label-caps mb-1">Источники</div>
                     <ol className="space-y-1">
                       {m.sources.map((s, j) => (
-                        <li key={s.url + j} className="text-xs">
+                        <li key={s.url} className="text-xs">
                           <a href={s.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
                             [{j + 1}] {s.title} <ExternalLink size={11} />
                           </a>
@@ -104,13 +176,10 @@ export default function OrbitAIPage() {
                     </ol>
                   </div>
                 )}
-                {m.role === 'assistant' && m.sources && m.sources.length === 0 && (
-                  <p className="mt-2 text-xs text-ink-mute">Подходящих источников в базе знаний не найдено.</p>
-                )}
               </div>
             </div>
           ))}
-          {pending && <div className="text-sm text-ink-mute">ORBIT AI думает…</div>}
+          {pending && <div className="text-sm text-ink-mute">ORBIT AI ищет в базе знаний…</div>}
           <div ref={endRef} />
         </div>
         <form
@@ -124,7 +193,7 @@ export default function OrbitAIPage() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              maxLength={2000}
+              maxLength={500}
               placeholder="Спросите ORBIT AI…"
               className="min-w-0 flex-1 rounded-lg border border-space-600 bg-space-950 px-3 py-2 text-sm"
               aria-label="Вопрос"
@@ -133,10 +202,6 @@ export default function OrbitAIPage() {
               <Send size={16} />
             </button>
           </div>
-          <label className="flex items-center gap-2 text-xs text-ink-mute">
-            <input type="checkbox" checked={includeHealth} onChange={(e) => setIncludeHealth(e.target.checked)} />
-            Учитывать мои показатели и предупреждения (только ваши данные, по правам доступа)
-          </label>
           <p className="text-[11px] text-ink-mute">ORBIT AI не ставит диагнозы и не назначает лечение. При серьёзной проблеме обратитесь к медицинскому специалисту миссии.</p>
         </form>
       </Card>

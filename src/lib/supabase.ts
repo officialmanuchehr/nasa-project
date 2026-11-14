@@ -6,6 +6,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-/** null — если ключи не заданы: приложение работает в локальном демо-режиме. */
-export const supabase: SupabaseClient | null = url && anonKey ? createClient(url, anonKey) : null
+// Supabase включается явно: VITE_USE_SUPABASE=true. Иначе — автономный демо-режим
+// без регистрации (данные симулятора в браузере).
+const enabled = import.meta.env.VITE_USE_SUPABASE === 'true'
+
+/** null — автономный демо-режим. */
+export const supabase: SupabaseClient | null = enabled && url && anonKey ? createClient(url, anonKey) : null
 export const isSupabaseConfigured = supabase !== null

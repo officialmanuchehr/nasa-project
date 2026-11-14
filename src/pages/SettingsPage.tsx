@@ -17,7 +17,7 @@ export function SettingsPage() {
             {mode === 'supabase' ? (
               <>Подключено к <b>Supabase</b>: авторизация, PostgreSQL с RLS и Realtime.</>
             ) : (
-              <>Локальный <b>демо-режим</b>: Supabase не настроен, данные хранятся в памяти браузера.</>
+              <>Автономный <b>демо-режим</b> без регистрации: данные генерирует симулятор прямо в браузере. Подключение Supabase (вход, БД с RLS, Realtime) включается переменной VITE_USE_SUPABASE=true.</>
             )}
           </p>
           <p className="mt-2 text-sm text-ink-dim">

@@ -82,6 +82,7 @@ const sql = [
   'begin;',
 ]
 let total = 0
+const json = [] // та же база для поиска в браузере (src/data/nasa-knowledge.json)
 for (const url of SOURCES) {
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (StarTime+ knowledge builder)' }, redirect: 'follow' })
@@ -97,6 +98,7 @@ for (const url of SOURCES) {
     )
     sql.push(`insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values ${chunks.map((c, i) => `(${i}, ${q(c)})`).join(', ')}) as v(i, c);`)
     total += chunks.length
+    json.push({ title, url: finalUrl, publisher, published, chunks })
     console.log(`✓ ${title} — ${chunks.length} фрагм. (${finalUrl})`)
   } catch (e) {
     console.log(`✗ ${url}: ${e.message}`)
@@ -104,4 +106,5 @@ for (const url of SOURCES) {
 }
 sql.push('commit;')
 writeFileSync(new URL('../supabase/seed_knowledge.sql', import.meta.url), sql.join('\n') + '\n')
+writeFileSync(new URL('../src/data/nasa-knowledge.json', import.meta.url), JSON.stringify({ built_at: new Date().toISOString(), sources: json }))
 console.log(`Готово: ${total} фрагментов → supabase/seed_knowledge.sql`)
