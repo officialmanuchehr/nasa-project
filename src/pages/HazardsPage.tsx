@@ -72,7 +72,7 @@ export default function HazardsPage() {
         <Source label="NASA Human Research Program — 5 Hazards of Human Spaceflight" url="https://www.nasa.gov/hrp/hazards/" />
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <Card title={tr('О рисках пилотируемых полётов', 'About Human Spaceflight Risks')}>
           <p className="text-sm leading-relaxed text-ink-dim">
             {tr(
