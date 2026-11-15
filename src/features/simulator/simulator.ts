@@ -5,14 +5,27 @@
 // не используются для медицинских выводов.
 import type { HealthMetric, MetricType, RadiationRecord, SleepRecord } from '../../types'
 import { METRICS } from '../health/metrics'
+import { tr } from '../../lib/i18n'
 
 export type Scenario = 'normal' | 'gaps' | 'stale_sensor' | 'trend_change'
 
 export const SCENARIOS: Record<Scenario, { label: string; description: string }> = {
-  normal: { label: 'Обычная динамика', description: 'Стабильные показатели с суточным ритмом и шумом.' },
-  gaps: { label: 'Пропуски измерений', description: 'Часть измерений отсутствует (NULL) или помечена как сомнительная.' },
-  stale_sensor: { label: 'Устаревший датчик', description: 'Датчик SpO₂ перестал присылать данные последние 10 часов.' },
-  trend_change: { label: 'Изменение тенденции', description: 'Последние 3 суток пульс и температура растут, сон сокращается, всплеск радиации.' },
+  normal: {
+    get label() { return tr('Обычная динамика', 'Normal dynamics') },
+    get description() { return tr('Стабильные показатели с суточным ритмом и шумом.', 'Stable vitals with a circadian rhythm and noise.') },
+  },
+  gaps: {
+    get label() { return tr('Пропуски измерений', 'Missing measurements') },
+    get description() { return tr('Часть измерений отсутствует (NULL) или помечена как сомнительная.', 'Some measurements are missing (NULL) or flagged as questionable.') },
+  },
+  stale_sensor: {
+    get label() { return tr('Устаревший датчик', 'Stale sensor') },
+    get description() { return tr('Датчик SpO₂ перестал присылать данные последние 10 часов.', 'The SpO₂ sensor has sent no data for the last 10 hours.') },
+  },
+  trend_change: {
+    get label() { return tr('Изменение тенденции', 'Trend change') },
+    get description() { return tr('Последние 3 суток пульс и температура растут, сон сокращается, всплеск радиации.', 'Over the last 3 days heart rate and temperature rise, sleep shortens, radiation spikes.') },
+  },
 }
 
 const HOUR = 3600_000
@@ -143,7 +156,7 @@ export function generateHistory(ctx: SimContext, days = 21): SimHistory {
         measured_value: Number(Math.max(0.01, 0.12 + 0.015 * gauss(r) + (spike ? 0.45 : 0)).toFixed(3)),
         unit: 'mSv',
         recorded_at: new Date(t).toISOString(),
-        instrument_source: 'Симулятор дозиметра',
+        instrument_source: 'Dosimeter simulator',
         is_simulated: true,
       })
     }

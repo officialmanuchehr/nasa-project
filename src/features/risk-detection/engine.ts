@@ -21,6 +21,7 @@ import type {
   SymptomLog,
 } from '../../types'
 import { METRICS } from '../health/metrics'
+import { tr } from '../../lib/i18n'
 
 export const RULESET_VERSION = 'demo-2026.11-r1'
 
@@ -168,17 +169,20 @@ export function evaluate(input: EngineInput): EngineOutput {
         ...base,
         category: 'data_quality',
         severity: 'LOW',
-        title: `Нет свежих данных: ${info.label}`,
-        description: `Последнее валидное измерение «${info.label}» было ${hours === null ? 'давно' : `${hours} ч назад`} (допуск: ${CONFIG.staleHours} ч). Медицинские правила для этого показателя приостановлены.`,
-        next_step: 'Проверить крепление и питание датчика, синхронизацию устройства.',
-        data_quality: 'Данные устарели',
+        title: tr(`Нет свежих данных: ${info.label}`, `No fresh data: ${info.label}`),
+        description: tr(
+          `Последнее валидное измерение «${info.label}» было ${hours === null ? 'давно' : `${hours} ч назад`} (допуск: ${CONFIG.staleHours} ч). Медицинские правила для этого показателя приостановлены.`,
+          `The last valid "${info.label}" reading was ${hours === null ? 'long ago' : `${hours} h ago`} (tolerance: ${CONFIG.staleHours} h). Medical rules for this metric are paused.`,
+        ),
+        next_step: tr('Проверить крепление и питание датчика, синхронизацию устройства.', 'Check sensor attachment, power and device sync.'),
+        data_quality: tr('Данные устарели', 'Data is stale'),
         rule_id: 'DQ-1 stale_sensor',
         dedup_key: `DQ-1:${type}`,
-        evidence_json: { metric: type, note: last ? `Последнее измерение: ${new Date(last).toISOString()}` : 'Нет валидных измерений' },
+        evidence_json: { metric: type, note: last ? tr(`Последнее измерение: ${new Date(last).toISOString()}`, `Last reading: ${new Date(last).toISOString()}`) : tr('Нет валидных измерений', 'No valid readings') },
         period_start: new Date(last ?? now).toISOString(),
         period_end: input.now.toISOString(),
       })
-      note('data_quality', 'attention', 'LOW', `Датчик «${info.label}» не присылает данные.`)
+      note('data_quality', 'attention', 'LOW', tr(`Датчик «${info.label}» не присылает данные.`, `The "${info.label}" sensor is not sending data.`))
     }
     const day = all.filter((m) => t(m.recorded_at) > now - 24 * HOUR)
     const bad = day.filter((m) => !isValid(m)).length
@@ -187,17 +191,20 @@ export function evaluate(input: EngineInput): EngineOutput {
         ...base,
         category: 'data_quality',
         severity: 'LOW',
-        title: `Много пропусков: ${info.label}`,
-        description: `За 24 ч ${bad} из ${day.length} измерений «${info.label}» отсутствуют или сомнительны (${Math.round((bad / day.length) * 100)}%). Такие измерения исключены из анализа.`,
-        next_step: 'Проверить датчик; не делать выводов по неполным данным.',
-        data_quality: `Пропуски ${Math.round((bad / day.length) * 100)}%`,
+        title: tr(`Много пропусков: ${info.label}`, `Many gaps: ${info.label}`),
+        description: tr(
+          `За 24 ч ${bad} из ${day.length} измерений «${info.label}» отсутствуют или сомнительны (${Math.round((bad / day.length) * 100)}%). Такие измерения исключены из анализа.`,
+          `In 24 h, ${bad} of ${day.length} "${info.label}" readings are missing or questionable (${Math.round((bad / day.length) * 100)}%). They are excluded from analysis.`,
+        ),
+        next_step: tr('Проверить датчик; не делать выводов по неполным данным.', 'Check the sensor; do not draw conclusions from incomplete data.'),
+        data_quality: tr(`Пропуски ${Math.round((bad / day.length) * 100)}%`, `Gaps ${Math.round((bad / day.length) * 100)}%`),
         rule_id: 'DQ-2 missing_data',
         dedup_key: `DQ-2:${type}`,
-        evidence_json: { metric: type, n: day.length, note: `${bad} невалидных` },
+        evidence_json: { metric: type, n: day.length, note: tr(`${bad} невалидных`, `${bad} invalid`) },
         period_start: new Date(now - 24 * HOUR).toISOString(),
         period_end: input.now.toISOString(),
       })
-      note('data_quality', 'attention', 'LOW', `Много пропусков в «${info.label}».`)
+      note('data_quality', 'attention', 'LOW', tr(`Много пропусков в «${info.label}».`, `Many gaps in "${info.label}".`))
     }
   }
 
@@ -207,7 +214,7 @@ export function evaluate(input: EngineInput): EngineOutput {
     const readings = byMetric.get(type) ?? []
     const b = computeBaseline(readings)
     if (!b) {
-      note(info.category, 'insufficient_data', null, `Недостаточно данных для baseline «${info.label}».`)
+      note(info.category, 'insufficient_data', null, tr(`Недостаточно данных для baseline «${info.label}».`, `Not enough data for a "${info.label}" baseline.`))
       continue
     }
     baselines[type] = b
@@ -215,7 +222,7 @@ export function evaluate(input: EngineInput): EngineOutput {
     const w1 = windowResidualZ(readings, b, now - W, now) // последние 12 ч
     const w2 = windowResidualZ(readings, b, now - 2 * W, now - W) // предыдущие 12 ч
     if (w1.z === null || w2.z === null) {
-      note(info.category, 'insufficient_data', null, `Недостаточно свежих валидных данных «${info.label}» для анализа тенденции.`)
+      note(info.category, 'insufficient_data', null, tr(`Недостаточно свежих валидных данных «${info.label}» для анализа тенденции.`, `Not enough fresh valid "${info.label}" data for trend analysis.`))
       continue
     }
     // «Устойчивое» = оба окна смещены в одну сторону; уровень — по меньшему смещению.
@@ -223,7 +230,7 @@ export function evaluate(input: EngineInput): EngineOutput {
     const sustainedZ = sameSide ? Math.min(Math.abs(w1.z), Math.abs(w2.z)) : 0
     const sev = shiftSeverity(sustainedZ)
     if (!sev) {
-      note(info.category, 'ok', null, `«${info.label}» в пределах личной baseline (смещение ${sustainedZ.toFixed(1)}σ).`)
+      note(info.category, 'ok', null, tr(`«${info.label}» в пределах личной baseline (смещение ${sustainedZ.toFixed(1)}σ).`, `"${info.label}" is within the personal baseline (shift ${sustainedZ.toFixed(1)}σ).`))
       continue
     }
     const dir = w1.z > 0 ? 'up' : 'down'
@@ -233,23 +240,35 @@ export function evaluate(input: EngineInput): EngineOutput {
       current: Number(w1.current.toFixed(info.decimals)),
       unit: info.unit,
       n: w1.n + w2.n,
-      note: `Смещение: ${w2.z.toFixed(1)}σ (12–24 ч назад) → ${w1.z.toFixed(1)}σ (последние 12 ч); σ = ${b.spread.toFixed(2)} ${info.unit}`,
+      note: tr(
+        `Смещение: ${w2.z.toFixed(1)}σ (12–24 ч назад) → ${w1.z.toFixed(1)}σ (последние 12 ч); σ = ${b.spread.toFixed(2)} ${info.unit}`,
+        `Shift: ${w2.z.toFixed(1)}σ (12–24 h ago) → ${w1.z.toFixed(1)}σ (last 12 h); σ = ${b.spread.toFixed(2)} ${info.unit}`,
+      ),
     }
     drafts.push({
       ...base,
       category: info.category,
       severity: sev,
-      title: `${info.label}: устойчивое ${dir === 'up' ? 'повышение' : 'снижение'} относительно личной baseline`,
-      description: `Медиана за последние 12 ч — ${ev.current} ${info.unit}, ожидаемо по личной baseline для этих часов — ${ev.baseline} ${info.unit}. Смещение сохраняется 24 ч (${sustainedZ.toFixed(1)}σ). Это наблюдение, а не диагноз.`,
-      next_step: sev === 'HIGH' ? 'Сообщить медицинскому специалисту миссии и следовать утверждённому протоколу.' : 'Продолжить наблюдение; при сохранении — обсудить со специалистом.',
-      data_quality: `Валидных измерений: ${w1.n + w2.n} за 24 ч`,
+      title: tr(
+        `${info.label}: устойчивое ${dir === 'up' ? 'повышение' : 'снижение'} относительно личной baseline`,
+        `${info.label}: sustained ${dir === 'up' ? 'increase' : 'decrease'} vs. personal baseline`,
+      ),
+      description: tr(
+        `Медиана за последние 12 ч — ${ev.current} ${info.unit}, ожидаемо по личной baseline для этих часов — ${ev.baseline} ${info.unit}. Смещение сохраняется 24 ч (${sustainedZ.toFixed(1)}σ). Это наблюдение, а не диагноз.`,
+        `Median over the last 12 h is ${ev.current} ${info.unit}; the personal baseline for these hours expects ${ev.baseline} ${info.unit}. The shift has persisted for 24 h (${sustainedZ.toFixed(1)}σ). This is an observation, not a diagnosis.`,
+      ),
+      next_step:
+        sev === 'HIGH'
+          ? tr('Сообщить медицинскому специалисту миссии и следовать утверждённому протоколу.', 'Notify the mission medical officer and follow the approved protocol.')
+          : tr('Продолжить наблюдение; при сохранении — обсудить со специалистом.', 'Keep monitoring; if it persists, discuss with a specialist.'),
+      data_quality: tr(`Валидных измерений: ${w1.n + w2.n} за 24 ч`, `Valid readings: ${w1.n + w2.n} in 24 h`),
       rule_id: 'BL-1 baseline_shift',
       dedup_key: `BL-1:${type}:${dir}`,
       evidence_json: ev,
       period_start: new Date(now - 2 * W).toISOString(),
       period_end: input.now.toISOString(),
     })
-    note(info.category, 'attention', sev, `«${info.label}»: устойчивое смещение ${sustainedZ.toFixed(1)}σ.`)
+    note(info.category, 'attention', sev, tr(`«${info.label}»: устойчивое смещение ${sustainedZ.toFixed(1)}σ.`, `"${info.label}": sustained shift of ${sustainedZ.toFixed(1)}σ.`))
   }
 
   // Правило SL-1: сокращение сна относительно личной истории.
@@ -266,22 +285,25 @@ export function evaluate(input: EngineInput): EngineOutput {
         ...base,
         category: 'sleep',
         severity: sev,
-        title: 'Сон короче личной нормы',
-        description: `Последние ${recent.length} ночи: в среднем ${Math.round(avg)} мин против личной baseline ${Math.round(baseline)} мин (каждая ночь короче минимум на ${Math.round(minDrop * 100)}%).`,
-        next_step: 'Проверить расписание и условия сна; обсудить со специалистом при сохранении.',
-        data_quality: `${nights.length} ночей в истории`,
+        title: tr('Сон короче личной нормы', 'Sleep shorter than personal norm'),
+        description: tr(
+          `Последние ${recent.length} ночи: в среднем ${Math.round(avg)} мин против личной baseline ${Math.round(baseline)} мин (каждая ночь короче минимум на ${Math.round(minDrop * 100)}%).`,
+          `Last ${recent.length} nights: average ${Math.round(avg)} min vs. personal baseline ${Math.round(baseline)} min (each night at least ${Math.round(minDrop * 100)}% shorter).`,
+        ),
+        next_step: tr('Проверить расписание и условия сна; обсудить со специалистом при сохранении.', 'Review the sleep schedule and conditions; discuss with a specialist if it persists.'),
+        data_quality: tr(`${nights.length} ночей в истории`, `${nights.length} nights of history`),
         rule_id: 'SL-1 sleep_reduction',
         dedup_key: 'SL-1:duration',
-        evidence_json: { baseline: Math.round(baseline), current: Math.round(avg), unit: 'мин', n: recent.length },
+        evidence_json: { baseline: Math.round(baseline), current: Math.round(avg), unit: tr('мин', 'min'), n: recent.length },
         period_start: recent[0].sleep_start,
         period_end: recent[recent.length - 1].sleep_end,
       })
-      note('sleep', 'attention', sev, `Сон сокращён на ≥${Math.round(minDrop * 100)}% относительно baseline.`)
+      note('sleep', 'attention', sev, tr(`Сон сокращён на ≥${Math.round(minDrop * 100)}% относительно baseline.`, `Sleep reduced by ≥${Math.round(minDrop * 100)}% vs. baseline.`))
     } else {
-      note('sleep', 'ok', null, `Сон в пределах личной истории (≈${Math.round(avg)} мин против ${Math.round(baseline)} мин).`)
+      note('sleep', 'ok', null, tr(`Сон в пределах личной истории (≈${Math.round(avg)} мин против ${Math.round(baseline)} мин).`, `Sleep within personal history (≈${Math.round(avg)} min vs. ${Math.round(baseline)} min).`))
     }
   } else {
-    note('sleep', 'insufficient_data', null, 'Недостаточно ночей для сравнения с личной историей.')
+    note('sleep', 'insufficient_data', null, tr('Недостаточно ночей для сравнения с личной историей.', 'Not enough nights to compare with personal history.'))
   }
 
   // Правило RD-1: доза за 24 ч относительно истории миссии (только при известных единицах).
@@ -304,22 +326,25 @@ export function evaluate(input: EngineInput): EngineOutput {
           ...base,
           category: 'radiation',
           severity: sev,
-          title: 'Повышенная доза за 24 ч относительно истории миссии',
-          description: `Доза за последние 24 ч — ${last24.toFixed(2)} мЗв, медиана суточной дозы миссии — ${med.toFixed(2)} мЗв (×${ratio.toFixed(1)}).`,
-          next_step: 'Сверить с данными дозиметрии миссии и следовать протоколу радиационной безопасности.',
-          data_quality: `${rad.length} измерений дозиметра`,
+          title: tr('Повышенная доза за 24 ч относительно истории миссии', 'Elevated 24 h dose vs. mission history'),
+          description: tr(
+            `Доза за последние 24 ч — ${last24.toFixed(2)} мЗв, медиана суточной дозы миссии — ${med.toFixed(2)} мЗв (×${ratio.toFixed(1)}).`,
+            `Dose over the last 24 h is ${last24.toFixed(2)} mSv; the mission's median daily dose is ${med.toFixed(2)} mSv (×${ratio.toFixed(1)}).`,
+          ),
+          next_step: tr('Сверить с данными дозиметрии миссии и следовать протоколу радиационной безопасности.', 'Cross-check with mission dosimetry and follow the radiation safety protocol.'),
+          data_quality: tr(`${rad.length} измерений дозиметра`, `${rad.length} dosimeter readings`),
           rule_id: 'RD-1 dose_rate_change',
           dedup_key: 'RD-1:daily_dose',
-          evidence_json: { baseline: Number(med.toFixed(3)), current: Number(last24.toFixed(3)), unit: 'мЗв', n: daily.length },
+          evidence_json: { baseline: Number(med.toFixed(3)), current: Number(last24.toFixed(3)), unit: tr('мЗв', 'mSv'), n: daily.length },
           period_start: new Date(now - 24 * HOUR).toISOString(),
           period_end: input.now.toISOString(),
         })
-        note('radiation', 'attention', sev, `Доза за 24 ч в ${ratio.toFixed(1)} раза выше медианы миссии.`)
+        note('radiation', 'attention', sev, tr(`Доза за 24 ч в ${ratio.toFixed(1)} раза выше медианы миссии.`, `24 h dose is ${ratio.toFixed(1)}× the mission median.`))
       } else {
-        note('radiation', 'ok', null, `Доза за 24 ч соответствует истории миссии (×${ratio.toFixed(1)}).`)
+        note('radiation', 'ok', null, tr(`Доза за 24 ч соответствует истории миссии (×${ratio.toFixed(1)}).`, `24 h dose matches mission history (×${ratio.toFixed(1)}).`))
       }
-    } else note('radiation', 'insufficient_data', null, 'Мало истории дозиметрии для сравнения.')
-  } else note('radiation', 'insufficient_data', null, 'Нет измерений дозиметра — значения не подставляются.')
+    } else note('radiation', 'insufficient_data', null, tr('Мало истории дозиметрии для сравнения.', 'Too little dosimetry history to compare.'))
+  } else note('radiation', 'insufficient_data', null, tr('Нет измерений дозиметра — значения не подставляются.', 'No dosimeter readings — no values are substituted.'))
 
   // Правило SR-1: самоотчёт о самочувствии с высокой интенсивностью.
   const recentSymptoms = input.symptoms.filter((s) => t(s.recorded_at) > now - 24 * HOUR && s.intensity >= CONFIG.symptomIntensity)
@@ -329,21 +354,24 @@ export function evaluate(input: EngineInput): EngineOutput {
       ...base,
       category: 'behavioral',
       severity: 'LOW',
-      title: `Самоотчёт: ${s.symptom_category}`,
-      description: `Астронавт отметил «${s.symptom_category}» с интенсивностью ${s.intensity}/10: «${s.self_report}». Это самоотчёт, а не диагноз.`,
-      next_step: 'Обсудить самочувствие с медицинским специалистом миссии.',
-      data_quality: 'Субъективный самоотчёт',
+      title: tr(`Самоотчёт: ${s.symptom_category}`, `Self-report: ${s.symptom_category}`),
+      description: tr(
+        `Астронавт отметил «${s.symptom_category}» с интенсивностью ${s.intensity}/10: «${s.self_report}». Это самоотчёт, а не диагноз.`,
+        `The astronaut reported "${s.symptom_category}" at intensity ${s.intensity}/10: "${s.self_report}". This is a self-report, not a diagnosis.`,
+      ),
+      next_step: tr('Обсудить самочувствие с медицинским специалистом миссии.', 'Discuss well-being with the mission medical officer.'),
+      data_quality: tr('Субъективный самоотчёт', 'Subjective self-report'),
       rule_id: 'SR-1 self_report',
       dedup_key: `SR-1:${s.symptom_category}`,
       evidence_json: { current: s.intensity, unit: '/10', note: s.self_report },
       period_start: s.recorded_at,
       period_end: input.now.toISOString(),
     })
-    note('behavioral', 'attention', 'LOW', `Самоотчёт: «${s.symptom_category}» (${s.intensity}/10).`)
-  } else note('behavioral', 'ok', null, 'Нет самоотчётов высокой интенсивности за 24 ч.')
+    note('behavioral', 'attention', 'LOW', tr(`Самоотчёт: «${s.symptom_category}» (${s.intensity}/10).`, `Self-report: "${s.symptom_category}" (${s.intensity}/10).`))
+  } else note('behavioral', 'ok', null, tr('Нет самоотчётов высокой интенсивности за 24 ч.', 'No high-intensity self-reports in 24 h.'))
 
   const order: RiskCategory[] = ['cardiovascular', 'respiratory', 'thermoregulation', 'sleep', 'radiation', 'behavioral', 'data_quality']
-  if (!catState.has('data_quality')) note('data_quality', 'ok', null, 'Данные свежие, пропусков мало.')
+  if (!catState.has('data_quality')) note('data_quality', 'ok', null, tr('Данные свежие, пропусков мало.', 'Data is fresh, few gaps.'))
   const assessments = order.filter((c) => catState.has(c)).map((c) => catState.get(c)!)
   return { drafts, assessments, baselines }
 }

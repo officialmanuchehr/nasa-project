@@ -13,6 +13,8 @@ describe('ORBIT knowledge search', () => {
     ['Как микрогравитация влияет на кости и мышцы?', /bone|muscle/i],
     ['Почему изоляция опасна для экипажа?', /isolat|confine/i],
     ['Что происходит со зрением в космосе?', /vision|eye/i],
+    ['How does microgravity affect bones and muscles?', /bone|muscle/i],
+    ['What are the risks of space radiation?', /radiation/i],
   ])('%s', (q, re) => {
     const hits = search(q)
     expect(hits.length).toBeGreaterThan(0)

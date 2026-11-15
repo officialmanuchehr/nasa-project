@@ -12,6 +12,7 @@ import { excerpt, KNOWLEDGE_STATS, search } from '../features/orbit-ai/knowledge
 import { CATEGORY_LABELS } from '../features/health/metrics'
 import type { HealthAlert, OrbitSource } from '../types'
 import type { CategoryAssessment } from '../features/risk-detection/engine'
+import { tr } from '../lib/i18n'
 
 interface Quote {
   text: string
@@ -24,15 +25,15 @@ interface Msg {
   sources?: OrbitSource[]
 }
 
-const SUGGESTIONS = [
-  'Как микрогравитация влияет на кости и мышцы?',
-  'Какие риски несёт космическое излучение?',
-  'Почему изоляция опасна для экипажа?',
-  'Что происходит со зрением в космосе?',
-  'Объясни мои текущие предупреждения',
+const SUGGESTIONS = () => [
+  tr('Как микрогравитация влияет на кости и мышцы?', 'How does microgravity affect bones and muscles?'),
+  tr('Какие риски несёт космическое излучение?', 'What are the risks of space radiation?'),
+  tr('Почему изоляция опасна для экипажа?', 'Why is isolation dangerous for the crew?'),
+  tr('Что происходит со зрением в космосе?', 'What happens to vision in space?'),
+  tr('Объясни мои текущие предупреждения', 'Explain my current alerts'),
 ]
 
-const ALERT_INTENT = /предупрежд|мои показат|моё состоян|мое состоян|мои данные|алерт|alert|риск.* у меня/i
+const ALERT_INTENT = /предупрежд|мои показат|моё состоян|мое состоян|мои данные|алерт|alert|warning|my (vitals|data|status|readings)|риск.* у меня/i
 const CATEGORY_QUERY: Record<string, string> = {
   cardiovascular: 'heart cardiovascular blood',
   respiratory: 'air carbon dioxide environment',
@@ -48,7 +49,10 @@ function answerKnowledge(question: string): Msg {
     return {
       role: 'assistant',
       content:
-        'В базе знаний NASA подходящих материалов по этому вопросу не найдено. Я не буду отвечать без подтверждающего источника. Попробуйте спросить о радиации, гравитации, костях и мышцах, изоляции, сне, зрении, удалённости от Земли или среде обитания.',
+        tr(
+          'В базе знаний NASA подходящих материалов по этому вопросу не найдено. Я не буду отвечать без подтверждающего источника. Попробуйте спросить о радиации, гравитации, костях и мышцах, изоляции, сне, зрении, удалённости от Земли или среде обитания.',
+          'No matching material was found in the NASA knowledge base. I won’t answer without a supporting source. Try asking about radiation, gravity, bones and muscles, isolation, sleep, vision, distance from Earth or the habitat environment.',
+        ),
       sources: [],
     }
   }
@@ -63,7 +67,10 @@ function answerKnowledge(question: string): Msg {
   })
   return {
     role: 'assistant',
-    content: `Нашёл в официальных материалах NASA ${quotes.length} ${quotes.length === 1 ? 'релевантный фрагмент' : 'релевантных фрагмента'} (цитаты на языке оригинала):`,
+    content: tr(
+      `Нашёл в официальных материалах NASA ${quotes.length} ${quotes.length === 1 ? 'релевантный фрагмент' : 'релевантных фрагмента'} (цитаты на языке оригинала):`,
+      `Found ${quotes.length} relevant ${quotes.length === 1 ? 'passage' : 'passages'} in official NASA materials:`,
+    ),
     quotes,
     sources,
   }
@@ -75,12 +82,15 @@ function answerAlerts(alerts: HealthAlert[], assessments: CategoryAssessment[]):
     const ok = assessments.filter((a) => a.status === 'ok').map((a) => CATEGORY_LABELS[a.category])
     return {
       role: 'assistant',
-      content: `Сейчас открытых предупреждений нет.${ok.length ? ` В пределах вашей личной baseline: ${ok.join(', ')}.` : ''}\n\nЧтобы увидеть, как работает обнаружение изменений, откройте «Симулятор» → «Изменение тенденции».`,
+      content: tr(
+        `Сейчас открытых предупреждений нет.${ok.length ? ` В пределах вашей личной baseline: ${ok.join(', ')}.` : ''}\n\nЧтобы увидеть, как работает обнаружение изменений, откройте «Симулятор» → «Изменение тенденции».`,
+        `There are no open alerts right now.${ok.length ? ` Within your personal baseline: ${ok.join(', ')}.` : ''}\n\nTo see change detection in action, open “Simulator” → “Trend change”.`,
+      ),
     }
   }
   const lines = open.map(
     (a, i) =>
-      `${i + 1}. [${a.severity}] ${a.title}\n   Почему: ${a.description}\n   Правило: ${a.rule_id} (${a.ruleset_version}) · Качество данных: ${a.data_quality}\n   Следующий шаг: ${a.next_step}`,
+      `${i + 1}. [${a.severity}] ${a.title}\n   ${tr('Почему', 'Why')}: ${a.description}\n   ${tr('Правило', 'Rule')}: ${a.rule_id} (${a.ruleset_version}) · ${tr('Качество данных', 'Data quality')}: ${a.data_quality}\n   ${tr('Следующий шаг', 'Next step')}: ${a.next_step}`,
   )
   // Научный контекст по категории самого приоритетного предупреждения
   const top = [...open].sort((x, y) => 'LOW MEDIUM HIGH CRITICAL'.indexOf(y.severity) - 'LOW MEDIUM HIGH CRITICAL'.indexOf(x.severity))[0]
@@ -88,9 +98,16 @@ function answerAlerts(alerts: HealthAlert[], assessments: CategoryAssessment[]):
   return {
     role: 'assistant',
     content:
-      `Открытых предупреждений: ${open.length}. Это наблюдения относительно вашей личной baseline, а не диагнозы.\n\n${lines.join('\n\n')}\n\n` +
-      'При серьёзных изменениях обратитесь к медицинскому специалисту миссии и следуйте утверждённому протоколу.' +
-      (ctx.length ? `\n\nНаучный контекст по категории «${CATEGORY_LABELS[top.category]}»:` : ''),
+      tr(
+        `Открытых предупреждений: ${open.length}. Это наблюдения относительно вашей личной baseline, а не диагнозы.`,
+        `Open alerts: ${open.length}. These are observations relative to your personal baseline, not diagnoses.`,
+      ) +
+      `\n\n${lines.join('\n\n')}\n\n` +
+      tr(
+        'При серьёзных изменениях обратитесь к медицинскому специалисту миссии и следуйте утверждённому протоколу.',
+        'For serious changes, contact the mission medical officer and follow the approved protocol.',
+      ) +
+      (ctx.length ? tr(`\n\nНаучный контекст по категории «${CATEGORY_LABELS[top.category]}»:`, `\n\nScientific context for “${CATEGORY_LABELS[top.category]}”:`) : ''),
     quotes: ctx.map((h) => ({ text: excerpt(h.text, 420), n: 1 })),
     sources: ctx.map((h) => h.source),
   }
@@ -121,11 +138,14 @@ export default function OrbitAIPage() {
 
   return (
     <div className="flex h-[calc(100vh-9rem)] min-h-[520px] flex-col">
-      <PageHeader title="ORBIT AI" subtitle="Научный помощник: факторы космического полёта по материалам NASA и объяснение ваших предупреждений" />
+      <PageHeader title="ORBIT AI" subtitle={tr('Научный помощник: факторы космического полёта по материалам NASA и объяснение ваших предупреждений', 'Science assistant: spaceflight hazards from NASA materials and an explanation of your alerts')} />
       <p className="mb-3 flex items-start gap-2 rounded-lg border border-accent/25 bg-accent/5 px-3 py-2 text-xs text-ink-dim">
         <BookOpen size={15} className="mt-0.5 shrink-0 text-accent" />
         <span>
-          Режим базы знаний: ответы — это оригинальные фрагменты {KNOWLEDGE_STATS.sources} официальных страниц NASA ({KNOWLEDGE_STATS.chunks} фрагментов) со ссылками на источники. Генеративный AI будет подключён на следующем этапе.
+          {tr(
+            `Режим базы знаний: ответы — это оригинальные фрагменты ${KNOWLEDGE_STATS.sources} официальных страниц NASA (${KNOWLEDGE_STATS.chunks} фрагментов) со ссылками на источники. Генеративный AI будет подключён на следующем этапе.`,
+            `Knowledge-base mode: answers are original passages from ${KNOWLEDGE_STATS.sources} official NASA pages (${KNOWLEDGE_STATS.chunks} passages) with source links. Generative AI will be connected in the next stage.`,
+          )}
         </span>
       </p>
       <Card className="flex min-h-0 flex-1 flex-col">
@@ -134,9 +154,9 @@ export default function OrbitAIPage() {
             <div className="grid h-full place-items-center text-center">
               <div>
                 <Bot size={40} className="mx-auto text-accent" />
-                <p className="mt-3 text-sm text-ink-dim">Задайте вопрос о влиянии космического полёта на здоровье.</p>
+                <p className="mt-3 text-sm text-ink-dim">{tr('Задайте вопрос о влиянии космического полёта на здоровье.', 'Ask a question about how spaceflight affects health.')}</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {SUGGESTIONS.map((s) => (
+                  {SUGGESTIONS().map((s) => (
                     <button key={s} onClick={() => send(s)} className="rounded-full border border-space-600 px-3 py-1.5 text-xs text-ink-dim hover:bg-space-800 hover:text-ink">
                       {s}
                     </button>
@@ -163,7 +183,7 @@ export default function OrbitAIPage() {
                 )}
                 {m.sources && m.sources.length > 0 && (
                   <div className="mt-3 border-t border-space-700 pt-2">
-                    <div className="label-caps mb-1">Источники</div>
+                    <div className="label-caps mb-1">{tr('Источники', 'Sources')}</div>
                     <ol className="space-y-1">
                       {m.sources.map((s, j) => (
                         <li key={s.url} className="text-xs">
@@ -179,7 +199,7 @@ export default function OrbitAIPage() {
               </div>
             </div>
           ))}
-          {pending && <div className="text-sm text-ink-mute">ORBIT AI ищет в базе знаний…</div>}
+          {pending && <div className="text-sm text-ink-mute">{tr('ORBIT AI ищет в базе знаний…', 'ORBIT AI is searching the knowledge base…')}</div>}
           <div ref={endRef} />
         </div>
         <form
@@ -194,15 +214,15 @@ export default function OrbitAIPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               maxLength={500}
-              placeholder="Спросите ORBIT AI…"
+              placeholder={tr('Спросите ORBIT AI…', 'Ask ORBIT AI…')}
               className="min-w-0 flex-1 rounded-lg border border-space-600 bg-space-950 px-3 py-2 text-sm"
-              aria-label="Вопрос"
+              aria-label={tr('Вопрос', 'Question')}
             />
-            <button type="submit" disabled={pending || !input.trim()} className="grid w-11 place-items-center rounded-lg bg-accent text-space-950 disabled:opacity-40" aria-label="Отправить">
+            <button type="submit" disabled={pending || !input.trim()} className="grid w-11 place-items-center rounded-lg bg-accent text-space-950 disabled:opacity-40" aria-label={tr('Отправить', 'Send')}>
               <Send size={16} />
             </button>
           </div>
-          <p className="text-[11px] text-ink-mute">ORBIT AI не ставит диагнозы и не назначает лечение. При серьёзной проблеме обратитесь к медицинскому специалисту миссии.</p>
+          <p className="text-[11px] text-ink-mute">{tr('ORBIT AI не ставит диагнозы и не назначает лечение. При серьёзной проблеме обратитесь к медицинскому специалисту миссии.', 'ORBIT AI does not diagnose or prescribe treatment. For a serious problem, contact the mission medical officer.')}</p>
         </form>
       </Card>
     </div>

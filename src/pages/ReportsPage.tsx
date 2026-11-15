@@ -5,8 +5,13 @@ import { useData } from '../features/health/DataProvider'
 import { Button, Card, PageHeader, SeverityBadge, SimBadge } from '../components/ui'
 import { CATEGORY_LABELS, METRICS, METRIC_TYPES, fmt } from '../features/health/metrics'
 import { periodStats } from '../features/health/selectors'
+import { locale, tr } from '../lib/i18n'
 
-const PERIODS = { day: { label: 'День', days: 1 }, week: { label: 'Неделя', days: 7 }, month: { label: 'Месяц', days: 30 } } as const
+const PERIODS = {
+  day: { get label() { return tr('День', 'Day') }, days: 1 },
+  week: { get label() { return tr('Неделя', 'Week') }, days: 7 },
+  month: { get label() { return tr('Месяц', 'Month') }, days: 30 },
+}
 type Period = keyof typeof PERIODS
 
 export default function ReportsPage() {
@@ -23,8 +28,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Health Reports"
-        subtitle={`${profile?.display_name ?? ''} · ${mission?.mission_code ?? ''} · ${new Date(from).toLocaleDateString('ru-RU')} — ${new Date().toLocaleDateString('ru-RU')}`}
+        title={tr('Отчёты о здоровье', 'Health Reports')}
+        subtitle={`${profile?.display_name ?? ''} · ${mission?.mission_code ?? ''} · ${new Date(from).toLocaleDateString(locale())} — ${new Date().toLocaleDateString(locale())}`}
         right={
           <div className="flex items-center gap-2 print:hidden">
             <div className="flex rounded-lg border border-space-600 p-0.5">
@@ -41,17 +46,17 @@ export default function ReportsPage() {
         }
       />
       <SimBadge />
-      <Card title="Показатели за период (медиана сравнивается с предыдущим периодом)">
+      <Card title={tr('Показатели за период (медиана сравнивается с предыдущим периодом)', 'Metrics for the period (median compared with the previous period)')}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-ink-mute">
               <tr>
-                <th className="py-2 font-medium">Показатель</th>
-                <th className="font-medium">Медиана</th>
-                <th className="font-medium">Изменение</th>
-                <th className="font-medium">Мин – Макс</th>
-                <th className="font-medium">Измерений</th>
-                <th className="font-medium">Пропуски</th>
+                <th className="py-2 font-medium">{tr('Показатель', 'Metric')}</th>
+                <th className="font-medium">{tr('Медиана', 'Median')}</th>
+                <th className="font-medium">{tr('Изменение', 'Change')}</th>
+                <th className="font-medium">{tr('Мин – Макс', 'Min – Max')}</th>
+                <th className="font-medium">{tr('Измерений', 'Readings')}</th>
+                <th className="font-medium">{tr('Пропуски', 'Gaps')}</th>
               </tr>
             </thead>
             <tbody className="font-mono">
@@ -76,14 +81,14 @@ export default function ReportsPage() {
         </div>
       </Card>
       <div className="grid gap-5 md:grid-cols-2">
-        <Card title="Сон и радиация">
+        <Card title={tr('Сон и радиация', 'Sleep and radiation')}>
           <dl className="space-y-1.5 text-sm">
-            <div className="flex justify-between"><dt className="text-ink-dim">Ночей в периоде</dt><dd className="font-mono">{nights.length}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink-dim">Средняя продолжительность сна</dt><dd className="font-mono">{nights.length ? `${Math.round(nights.reduce((s, n) => s + n.duration_minutes, 0) / nights.length)} мин` : '—'}</dd></div>
-            <div className="flex justify-between"><dt className="text-ink-dim">Доза радиации за период</dt><dd className="font-mono">{dose.toFixed(2)} мЗв</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-dim">{tr('Ночей в периоде', 'Nights in period')}</dt><dd className="font-mono">{nights.length}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-dim">{tr('Средняя продолжительность сна', 'Average sleep duration')}</dt><dd className="font-mono">{nights.length ? `${Math.round(nights.reduce((s, n) => s + n.duration_minutes, 0) / nights.length)} ${tr('мин', 'min')}` : '—'}</dd></div>
+            <div className="flex justify-between"><dt className="text-ink-dim">{tr('Доза радиации за период', 'Radiation dose for the period')}</dt><dd className="font-mono">{dose.toFixed(2)} {tr('мЗв', 'mSv')}</dd></div>
           </dl>
         </Card>
-        <Card title={`Предупреждения за период (${periodAlerts.length})`}>
+        <Card title={`${tr('Предупреждения за период', 'Alerts in period')} (${periodAlerts.length})`}>
           {periodAlerts.length ? (
             <ul className="space-y-1.5 text-sm">
               {periodAlerts.map((a) => (
@@ -95,11 +100,11 @@ export default function ReportsPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ink-mute">Предупреждений не было.</p>
+            <p className="text-sm text-ink-mute">{tr('Предупреждений не было.', 'No alerts.')}</p>
           )}
         </Card>
       </div>
-      <p className="text-xs text-ink-mute">Отчёт сформирован автоматически из демонстрационных данных и не является медицинским заключением.</p>
+      <p className="text-xs text-ink-mute">{tr('Отчёт сформирован автоматически из демонстрационных данных и не является медицинским заключением.', 'This report is generated automatically from demo data and is not a medical opinion.')}</p>
     </div>
   )
 }

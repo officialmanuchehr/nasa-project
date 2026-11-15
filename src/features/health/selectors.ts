@@ -1,6 +1,7 @@
 // Вспомогательные выборки из данных (последние значения, статистика за период).
 import type { HealthMetric, MetricType, RadiationRecord } from '../../types'
 import { isValid, median } from '../risk-detection/engine'
+import { tr } from '../../lib/i18n'
 
 export function byType(metrics: HealthMetric[], type: MetricType) {
   return metrics.filter((m) => m.metric_type === type)
@@ -13,12 +14,12 @@ export function latestValid(metrics: HealthMetric[], type: MetricType) {
 }
 
 export function ageLabel(iso?: string) {
-  if (!iso) return 'нет данных'
+  if (!iso) return tr('нет данных', 'no data')
   const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
-  if (min < 1) return 'только что'
-  if (min < 60) return `${min} мин назад`
+  if (min < 1) return tr('только что', 'just now')
+  if (min < 60) return tr(`${min} мин назад`, `${min} min ago`)
   const h = Math.round(min / 60)
-  return h < 48 ? `${h} ч назад` : `${Math.round(h / 24)} дн назад`
+  return h < 48 ? tr(`${h} ч назад`, `${h} h ago`) : tr(`${Math.round(h / 24)} дн назад`, `${Math.round(h / 24)} d ago`)
 }
 
 export function periodStats(metrics: HealthMetric[], type: MetricType, from: number) {

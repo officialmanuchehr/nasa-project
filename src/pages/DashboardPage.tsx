@@ -10,6 +10,7 @@ import { MetricChart } from '../components/charts/MetricChart'
 import { CATEGORY_LABELS, METRICS, fmt } from '../features/health/metrics'
 import { ageLabel, byType, dailyDose, latestValid } from '../features/health/selectors'
 import type { MetricType } from '../types'
+import { tr } from '../lib/i18n'
 
 const TILES: MetricType[] = ['heart_rate', 'spo2', 'body_temp', 'systolic_bp']
 
@@ -22,13 +23,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Dashboard" subtitle="Обзор состояния астронавта и миссии" right={anySim ? <SimBadge /> : undefined} />
+      <PageHeader title={tr('Панель управления', 'Dashboard')} subtitle={tr('Обзор состояния астронавта и миссии', 'Astronaut and mission status overview')} right={anySim ? <SimBadge /> : undefined} />
       <Disclaimer />
-      {error && <div className="rounded-lg border border-critical/40 bg-critical/10 px-3 py-2 text-sm text-critical">Ошибка: {error}</div>}
-      {loading && <p className="text-sm text-ink-mute">Загрузка данных…</p>}
+      {error && <div className="rounded-lg border border-critical/40 bg-critical/10 px-3 py-2 text-sm text-critical">{tr('Ошибка', 'Error')}: {error}</div>}
+      {loading && <p className="text-sm text-ink-mute">{tr('Загрузка данных…', 'Loading data…')}</p>}
 
       {!metrics.length && !loading ? (
-        <Empty>Данных пока нет. Откройте «Симулятор» вверху и выберите сценарий, чтобы сгенерировать демонстрационную историю.</Empty>
+        <Empty>{tr('Данных пока нет. Откройте «Симулятор» вверху и выберите сценарий, чтобы сгенерировать демонстрационную историю.', 'No data yet. Open the “Simulator” at the top and pick a scenario to generate a demo history.')}</Empty>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -39,27 +40,27 @@ export default function DashboardPage() {
               return (
                 <Stat
                   key={t}
-                  label={t === 'systolic_bp' ? 'Давление' : info.label}
+                  label={t === 'systolic_bp' ? tr('Давление', 'Blood pressure') : info.label}
                   value={t === 'systolic_bp' ? `${fmt(m?.value)}/${fmt(dia?.value)}` : fmt(m?.value, info.decimals)}
                   unit={info.unit}
                   color={info.color}
-                  hint={<span>{ageLabel(m?.recorded_at)}{m?.is_simulated && ' · симуляция'}</span>}
+                  hint={<span>{ageLabel(m?.recorded_at)}{m?.is_simulated && ` · ${tr('симуляция', 'simulated')}`}</span>}
                 />
               )
             })}
           </div>
 
           <div className="grid gap-5 lg:grid-cols-3">
-            <Card title="Оценка по категориям" className="lg:col-span-1" action={<Link to="/risk" className="text-xs text-accent">Подробнее →</Link>}>
+            <Card title={tr('Оценка по категориям', 'Assessment by category')} className="lg:col-span-1" action={<Link to="/risk" className="text-xs text-accent">{tr('Подробнее', 'Details')} →</Link>}>
               <ul className="space-y-2.5">
                 {engine?.assessments.map((a) => (
                   <li key={a.category} className="flex items-start gap-2.5">
                     {a.status === 'ok' ? (
-                      <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-ok" aria-label="В норме относительно baseline" />
+                      <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-ok" aria-label={tr('В норме относительно baseline', 'Within baseline')} />
                     ) : a.status === 'attention' ? (
-                      <AlertTriangle size={17} className="mt-0.5 shrink-0 text-medium" aria-label="Требует внимания" />
+                      <AlertTriangle size={17} className="mt-0.5 shrink-0 text-medium" aria-label={tr('Требует внимания', 'Needs attention')} />
                     ) : (
-                      <CircleDashed size={17} className="mt-0.5 shrink-0 text-ink-mute" aria-label="Недостаточно данных" />
+                      <CircleDashed size={17} className="mt-0.5 shrink-0 text-ink-mute" aria-label={tr('Недостаточно данных', 'Insufficient data')} />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 text-sm font-medium">
@@ -72,7 +73,7 @@ export default function DashboardPage() {
               </ul>
             </Card>
 
-            <Card title={`Активные предупреждения (${active.length})`} className="lg:col-span-2" action={<Link to="/notifications" className="text-xs text-accent">Все →</Link>}>
+            <Card title={`${tr('Активные предупреждения', 'Active alerts')} (${active.length})`} className="lg:col-span-2" action={<Link to="/notifications" className="text-xs text-accent">{tr('Все', 'All')} →</Link>}>
               {active.length ? (
                 <div className="space-y-2.5">
                   {active.slice(0, 4).map((a) => (
@@ -80,50 +81,50 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <Empty>Активных предупреждений нет.</Empty>
+                <Empty>{tr('Активных предупреждений нет.', 'No active alerts.')}</Empty>
               )}
             </Card>
           </div>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <Card title="Пульс · 72 ч (пунктир — личная baseline)">
+            <Card title={tr('Пульс · 72 ч (пунктир — личная baseline)', 'Heart rate · 72 h (dashed — personal baseline)')}>
               <MetricChart data={byType(metrics, 'heart_rate')} baseline={engine?.baselines.heart_rate} />
             </Card>
-            <Card title="Температура тела · 72 ч">
+            <Card title={tr('Температура тела · 72 ч', 'Body temperature · 72 h')}>
               <MetricChart data={byType(metrics, 'body_temp')} baseline={engine?.baselines.body_temp} />
             </Card>
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
-            <Card title="Последний сон">
+            <Card title={tr('Последний сон', 'Last sleep')}>
               {lastSleep ? (
                 <div>
                   <div className="font-mono text-3xl font-semibold">
-                    {Math.floor(lastSleep.duration_minutes / 60)}ч {lastSleep.duration_minutes % 60}м
+                    {Math.floor(lastSleep.duration_minutes / 60)}{tr('ч', 'h')} {lastSleep.duration_minutes % 60}{tr('м', 'm')}
                   </div>
                   <div className="mt-1 text-xs text-ink-mute">
-                    Пробуждений: {lastSleep.quality_data?.awakenings ?? '—'} · {lastSleep.is_simulated ? 'симуляция' : lastSleep.data_source}
+                    {tr('Пробуждений', 'Awakenings')}: {lastSleep.quality_data?.awakenings ?? '—'} · {lastSleep.is_simulated ? tr('симуляция', 'simulated') : lastSleep.data_source}
                   </div>
                 </div>
               ) : (
-                <Empty>Нет данных о сне</Empty>
+                <Empty>{tr('Нет данных о сне', 'No sleep data')}</Empty>
               )}
             </Card>
-            <Card title="Радиация · накопленная доза">
+            <Card title={tr('Радиация · накопленная доза', 'Radiation · cumulative dose')}>
               {dose.length ? (
                 <div>
                   <div className="font-mono text-3xl font-semibold text-medium">
-                    {dose[dose.length - 1].cumulative.toFixed(2)} <span className="text-sm text-ink-mute">мЗв</span>
+                    {dose[dose.length - 1].cumulative.toFixed(2)} <span className="text-sm text-ink-mute">{tr('мЗв', 'mSv')}</span>
                   </div>
-                  <div className="mt-1 text-xs text-ink-mute">за {dose.length} сут. наблюдения · симуляция дозиметра</div>
+                  <div className="mt-1 text-xs text-ink-mute">{tr(`за ${dose.length} сут. наблюдения · симуляция дозиметра`, `over ${dose.length} days of observation · simulated dosimeter`)}</div>
                 </div>
               ) : (
-                <Empty>Нет измерений дозиметра</Empty>
+                <Empty>{tr('Нет измерений дозиметра', 'No dosimeter readings')}</Empty>
               )}
             </Card>
             <SelfReport />
           </div>
-          {mission && <p className="text-xs text-ink-mute">Миссия {mission.mission_code} · данные из {metrics.some((m) => !m.is_simulated) ? 'датчиков и симулятора' : 'симулятора'}</p>}
+          {mission && <p className="text-xs text-ink-mute">{tr('Миссия', 'Mission')} {mission.mission_code} · {metrics.some((m) => !m.is_simulated) ? tr('данные из датчиков и симулятора', 'data from sensors and simulator') : tr('данные из симулятора', 'data from simulator')}</p>}
         </>
       )}
     </div>
@@ -132,12 +133,16 @@ export default function DashboardPage() {
 
 function SelfReport() {
   const { addSymptom } = useData()
-  const [cat, setCat] = useState('Усталость')
+  const cats = [
+    tr('Усталость', 'Fatigue'), tr('Головная боль', 'Headache'), tr('Тошнота', 'Nausea'), tr('Боль в спине', 'Back pain'),
+    tr('Нарушение зрения', 'Vision changes'), tr('Тревожность', 'Anxiety'), tr('Другое', 'Other'),
+  ]
+  const [cat, setCat] = useState(cats[0])
   const [text, setText] = useState('')
   const [intensity, setIntensity] = useState(3)
   const [sent, setSent] = useState(false)
   return (
-    <Card title="Самочувствие (самоотчёт)">
+    <Card title={tr('Самочувствие (самоотчёт)', 'Well-being (self-report)')}>
       <form
         className="space-y-2"
         onSubmit={async (e) => {
@@ -148,19 +153,19 @@ function SelfReport() {
           setTimeout(() => setSent(false), 2500)
         }}
       >
-        <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full rounded-lg border border-space-600 bg-space-900 px-2 py-1.5 text-sm" aria-label="Категория">
-          {['Усталость', 'Головная боль', 'Тошнота', 'Боль в спине', 'Нарушение зрения', 'Тревожность', 'Другое'].map((c) => (
+        <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full rounded-lg border border-space-600 bg-space-900 px-2 py-1.5 text-sm" aria-label={tr('Категория', 'Category')}>
+          {cats.map((c) => (
             <option key={c}>{c}</option>
           ))}
         </select>
-        <input value={text} onChange={(e) => setText(e.target.value)} maxLength={300} placeholder="Комментарий (необязательно)" className="w-full rounded-lg border border-space-600 bg-space-900 px-2 py-1.5 text-sm" />
+        <input value={text} onChange={(e) => setText(e.target.value)} maxLength={300} placeholder={tr('Комментарий (необязательно)', 'Comment (optional)')} className="w-full rounded-lg border border-space-600 bg-space-900 px-2 py-1.5 text-sm" />
         <label className="flex items-center gap-2 text-xs text-ink-dim">
-          Интенсивность
+          {tr('Интенсивность', 'Intensity')}
           <input type="range" min={0} max={10} value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} className="flex-1 accent-sky-400" />
           <span className="w-8 font-mono text-ink">{intensity}/10</span>
         </label>
         <Button type="submit" variant="ghost" className="w-full">
-          {sent ? 'Сохранено ✓' : 'Отправить'}
+          {sent ? tr('Сохранено ✓', 'Saved ✓') : tr('Отправить', 'Submit')}
         </Button>
       </form>
     </Card>

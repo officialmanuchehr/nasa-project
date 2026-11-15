@@ -5,8 +5,9 @@ import { ChevronDown } from 'lucide-react'
 import type { HealthAlert } from '../../types'
 import { CATEGORY_LABELS } from '../../features/health/metrics'
 import { SeverityBadge, StatusText } from '../ui'
+import { locale, tr } from '../../lib/i18n'
 
-const dt = (iso: string) => new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+const dt = (iso: string) => new Date(iso).toLocaleString(locale(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
 export function AlertCard({ alert, onAck, compact }: { alert: HealthAlert; onAck?: (id: string) => void; compact?: boolean }) {
   const [open, setOpen] = useState(!compact)
@@ -29,22 +30,22 @@ export function AlertCard({ alert, onAck, compact }: { alert: HealthAlert; onAck
           <p className="text-ink-dim">{alert.description}</p>
           <dl className="grid grid-cols-1 gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
             {e.baseline !== undefined && (
-              <Row k="Личная baseline" v={`${e.baseline} ${e.unit ?? ''}`} />
+              <Row k={tr('Личная baseline', 'Personal baseline')} v={`${e.baseline} ${e.unit ?? ''}`} />
             )}
-            {e.current !== undefined && <Row k="Текущее значение" v={`${e.current} ${e.unit ?? ''}`} />}
-            <Row k="Период" v={`${dt(alert.period_start)} — ${dt(alert.period_end)}`} />
-            <Row k="Качество данных" v={alert.data_quality} />
-            <Row k="Правило" v={`${alert.rule_id} · ${alert.ruleset_version}`} />
-            <Row k="Создано" v={dt(alert.created_at)} />
+            {e.current !== undefined && <Row k={tr('Текущее значение', 'Current value')} v={`${e.current} ${e.unit ?? ''}`} />}
+            <Row k={tr('Период', 'Period')} v={`${dt(alert.period_start)} — ${dt(alert.period_end)}`} />
+            <Row k={tr('Качество данных', 'Data quality')} v={alert.data_quality} />
+            <Row k={tr('Правило', 'Rule')} v={`${alert.rule_id} · ${alert.ruleset_version}`} />
+            <Row k={tr('Создано', 'Created')} v={dt(alert.created_at)} />
           </dl>
           {e.note && <p className="font-mono text-[11px] text-ink-mute">{e.note}</p>}
           <div className="rounded-lg border border-accent/25 bg-accent/5 px-3 py-2 text-xs">
-            <span className="font-semibold text-accent">Следующий шаг: </span>
+            <span className="font-semibold text-accent">{tr('Следующий шаг', 'Next step')}: </span>
             {alert.next_step}
           </div>
           {onAck && alert.status === 'active' && (
             <button onClick={() => onAck(alert.id)} className="rounded-lg border border-space-600 px-3 py-1.5 text-xs font-semibold hover:bg-space-800">
-              Подтвердить ознакомление
+              {tr('Подтвердить ознакомление', 'Acknowledge')}
             </button>
           )}
         </div>

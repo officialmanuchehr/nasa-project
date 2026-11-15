@@ -6,21 +6,30 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
+import { getLang, tr, useLang } from '../../lib/i18n'
 import type { CrewMember, HealthAlert, HealthMetric, Mission, Profile, RadiationRecord, SleepRecord, SymptomLog } from '../../types'
 import { evaluate, reconcile, type EngineOutput } from '../risk-detection/engine'
 import { generateHistory, generateLivePoint, type Scenario } from '../simulator/simulator'
 
 const DEMO_MISSION: Mission = {
   id: '00000000-0000-0000-0000-000000000001',
-  name: 'Deep Horizon (демо)',
+  get name() { return tr('Deep Horizon (демо)', 'Deep Horizon (demo)') },
   mission_code: 'STM-01',
   start_date: new Date(Date.now() - 21 * 86400_000).toISOString(),
   end_date: new Date(Date.now() + 160 * 86400_000).toISOString(),
   status: 'active',
-  environment_json: { 'Тип': 'Длительная миссия (симуляция)', 'Гравитация': 'Микрогравитация', 'Экипаж': '4 человека' },
+  get environment_json(): Record<string, string> {
+    return getLang() === 'en'
+      ? { Type: 'Long-duration mission (simulated)', Gravity: 'Microgravity', Crew: '4 people' }
+      : { 'Тип': 'Длительная миссия (симуляция)', 'Гравитация': 'Микрогравитация', 'Экипаж': '4 человека' }
+  },
   is_demo: true,
 }
-const DEMO_PROFILE: Profile = { id: '00000000-0000-0000-0000-0000000000a1', display_name: 'Демо-астронавт', role: 'astronaut' }
+const DEMO_PROFILE: Profile = {
+  id: '00000000-0000-0000-0000-0000000000a1',
+  get display_name() { return tr('Демо-астронавт', 'Demo astronaut') },
+  role: 'astronaut',
+}
 
 interface DataState {
   mode: 'supabase' | 'demo'
@@ -53,7 +62,7 @@ interface DataState {
 const Ctx = createContext<DataState | null>(null)
 export const useData = () => {
   const c = useContext(Ctx)
-  if (!c) throw new Error('useData вне DataProvider')
+  if (!c) throw new Error('useData outside DataProvider')
   return c
 }
 
@@ -90,7 +99,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(mode === 'demo')
   const [profile, setProfile] = useState<Profile | null>(mode === 'demo' ? DEMO_PROFILE : null)
   const [mission, setMission] = useState<Mission | null>(mode === 'demo' ? DEMO_MISSION : null)
-  const [crew, setCrew] = useState<CrewMember[]>(mode === 'demo' ? [{ profile_id: DEMO_PROFILE.id, display_name: DEMO_PROFILE.display_name, mission_role: 'Бортинженер' }] : [])
+  const [crew, setCrew] = useState<CrewMember[]>(
+    mode === 'demo'
+      ? [{ profile_id: DEMO_PROFILE.id, get display_name() { return DEMO_PROFILE.display_name }, get mission_role() { return tr('Бортинженер', 'Flight engineer') } }]
+      : [],
+  )
   const [viewingId, setViewingId] = useState<string | null>(mode === 'demo' ? DEMO_PROFILE.id : null)
   const [metrics, setMetrics] = useState<HealthMetric[]>([])
   const [sleep, setSleep] = useState<SleepRecord[]>([])
@@ -104,6 +117,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const syncing = useRef(false)
+  const { lang } = useLang()
 
   const isSelf = !!profile && viewingId === profile.id
 
@@ -138,7 +152,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           (c ?? []).map((r: { profile_id: string; mission_role: string; profiles: { display_name: string } | { display_name: string }[] | null }) => ({
             profile_id: r.profile_id,
             mission_role: r.mission_role,
-            display_name: (Array.isArray(r.profiles) ? r.profiles[0]?.display_name : r.profiles?.display_name) ?? 'Участник',
+            display_name: (Array.isArray(r.profiles) ? r.profiles[0]?.display_name : r.profiles?.display_name) ?? tr('Участник', 'Member'),
           })),
         )
       } catch (e) {
@@ -215,7 +229,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const engine = useMemo(() => {
     if (!viewingId || !mission) return null
     return evaluate({ astronautId: viewingId, missionId: mission.id, metrics, sleep, radiation, symptoms, now: new Date(Math.max(now.getTime(), Date.now())) })
-  }, [viewingId, mission, metrics, sleep, radiation, symptoms, now])
+    // lang в зависимостях: тексты предупреждений и оценок пересчитываются на новом языке
+  }, [viewingId, mission, metrics, sleep, radiation, symptoms, now, lang])
+
+  // Смена языка: обновляем тексты уже открытых предупреждений (только в памяти, без записи в БД)
+  useEffect(() => {
+    if (!engine) return
+    const byKey = new Map(engine.drafts.map((d) => [d.dedup_key, d]))
+    setAlerts((xs) => {
+      let changed = false
+      const next = xs.map((a) => {
+        const d = a.status !== 'resolved' ? byKey.get(a.dedup_key) : undefined
+        if (!d || d.title === a.title) return a
+        changed = true
+        return { ...a, title: d.title, description: d.description, next_step: d.next_step, data_quality: d.data_quality, evidence_json: d.evidence_json }
+      })
+      return changed ? next : xs
+    })
+  }, [engine])
 
   // Сверка с сохранёнными предупреждениями (только для своих данных)
   useEffect(() => {

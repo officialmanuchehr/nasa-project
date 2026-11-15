@@ -4,12 +4,13 @@ import { useData } from '../features/health/DataProvider'
 import { Empty, PageHeader } from '../components/ui'
 import { AlertCard } from '../components/alerts/AlertCard'
 import type { AlertStatus } from '../types'
+import { tr } from '../lib/i18n'
 
-const FILTERS: { key: AlertStatus | 'all'; label: string }[] = [
-  { key: 'all', label: 'Все' },
-  { key: 'active', label: 'Активные' },
-  { key: 'acknowledged', label: 'Ознакомлен' },
-  { key: 'resolved', label: 'Закрытые' },
+const FILTERS = (): { key: AlertStatus | 'all'; label: string }[] => [
+  { key: 'all', label: tr('Все', 'All') },
+  { key: 'active', label: tr('Активные', 'Active') },
+  { key: 'acknowledged', label: tr('Ознакомлен', 'Acknowledged') },
+  { key: 'resolved', label: tr('Закрытые', 'Resolved') },
 ]
 
 export default function NotificationsPage() {
@@ -19,11 +20,11 @@ export default function NotificationsPage() {
   return (
     <div>
       <PageHeader
-        title="Notifications"
-        subtitle="История предупреждений и их статусы"
+        title={tr('Уведомления', 'Notifications')}
+        subtitle={tr('История предупреждений и их статусы', 'Alert history and statuses')}
         right={
           <div className="flex rounded-lg border border-space-600 p-0.5">
-            {FILTERS.map((x) => (
+            {FILTERS().map((x) => (
               <button key={x.key} onClick={() => setF(x.key)} className={`rounded-md px-3 py-1 text-xs ${f === x.key ? 'bg-accent text-space-950' : 'text-ink-dim'}`}>
                 {x.label} ({x.key === 'all' ? alerts.length : alerts.filter((a) => a.status === x.key).length})
               </button>
@@ -38,7 +39,7 @@ export default function NotificationsPage() {
           ))}
         </div>
       ) : (
-        <Empty>Нет предупреждений в этой категории.</Empty>
+        <Empty>{tr('Нет предупреждений в этой категории.', 'No alerts in this category.')}</Empty>
       )}
     </div>
   )

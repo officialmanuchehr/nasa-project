@@ -13,10 +13,12 @@ import ReportsPage from '../pages/ReportsPage'
 import NotificationsPage from '../pages/NotificationsPage'
 import { ProfilePage, SettingsPage } from '../pages/SettingsPage'
 import LoginPage from '../pages/LoginPage'
+import HazardsPage from '../pages/HazardsPage'
+import { tr, useLang } from '../lib/i18n'
 
 function Gate() {
   const { mode, session, authReady } = useData()
-  if (!authReady) return <div className="grid min-h-screen place-items-center text-sm text-ink-mute">Загрузка…</div>
+  if (!authReady) return <div className="grid min-h-screen place-items-center text-sm text-ink-mute">{tr('Загрузка…', 'Loading…')}</div>
   if (mode === 'supabase' && !session) return <LoginPage />
   return (
     <Routes>
@@ -29,6 +31,7 @@ function Gate() {
         <Route path="orbit" element={<OrbitAIPage />} />
         <Route path="mission" element={<MissionPage />} />
         <Route path="crew" element={<CrewPage />} />
+        <Route path="hazards" element={<HazardsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="settings" element={<SettingsPage />} />
@@ -39,11 +42,17 @@ function Gate() {
   )
 }
 
+// При смене языка перемонтируем интерфейс (данные в DataProvider сохраняются)
+function LangKeyed() {
+  const { lang } = useLang()
+  return <Gate key={lang} />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <DataProvider>
-        <Gate />
+        <LangKeyed />
       </DataProvider>
     </BrowserRouter>
   )
