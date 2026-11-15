@@ -2,7 +2,7 @@
 -- Сгенерировано scripts/build-knowledge.mjs 2026-11-14. Повторный запуск безопасен.
 begin;
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/hazards/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('5 Hazards of Human Spaceflight', 'https://www.nasa.gov/hrp/hazards/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:34:18.525Z","chunks":4}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('5 Hazards of Human Spaceflight', 'https://www.nasa.gov/hrp/hazards/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:40:33.409Z","chunks":4}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Astronauts encounter five hazards as they journey through space. Recognizing these hazards allows NASA to seek ways that overcome the challenges of sending humans to the space station, the Moon, Mars, and beyond.
 A human journey to Mars, at first glance, offers an inexhaustible amount of complexities. To bring such a mission to the Red Planet from fiction to fact, NASA’s Human Research Program has pinpointed five hazards that astronauts will encounter on their journeys. These include space radiation , isolation and confinement , distance from Earth , gravity (and the lack of it), and closed or hostile environments. Scroll down to learn details involving each hazard.'), (1, 'Pooling the challenges of human spaceflight into categories allows for an organized effort to overcome the obstacles that lay before such a mission. However, these hazards do not stand alone. They can feed off one another and exacerbate effects on the human body, which are being studied using ground-based analogs , laboratories, and the International Space Station . These locations all serve as test beds to evaluate human performance, as well as the effectiveness of strategies that could keep astronauts safe and healthy in space.
 Through meticulous research, NASA is gaining valuable insight into how the human body and mind might respond during extended forays into space. The resulting data, technology, and methods serve as a knowledge bank from which scientists can extrapolate to multi-year interplanetary missions.
@@ -21,7 +21,7 @@ A spacecraft is not only a home, it’s also a machine. The ecosystem inside a v
 Risks of Human Spaceflight
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/hazard-space-radiation/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Space Radiation', 'https://www.nasa.gov/hrp/hazard-space-radiation/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:34:18.715Z","chunks":3}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Space Radiation', 'https://www.nasa.gov/hrp/hazard-space-radiation/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:40:33.629Z","chunks":3}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Space radiation is invisible to the human eye. It’s not only stealthy, but considered one of the most hazardous aspects of human spaceflight.
 Why Space Radiation Matters
 Space Radiation Laboratory
@@ -40,7 +40,7 @@ For more than 50 years, NASA’s Human Research Program (HRP) has studied what h
 ## Discover More Topics From NASA
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/hazard-isolation-and-confinement/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Isolation and Confinement', 'https://www.nasa.gov/hrp/hazard-isolation-and-confinement/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:34:18.880Z","chunks":4}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Isolation and Confinement', 'https://www.nasa.gov/hrp/hazard-isolation-and-confinement/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:40:33.907Z","chunks":4}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Behavioral responses occur among groups of people far from Earth who are isolated and confined in a small space over a long period of time. Crews will be carefully chosen, trained, and supported to ensure they can work effectively as a team for months or years in space.
 On Earth, we have the luxury of picking up our cell phones and instantly being connected with nearly everything and everyone around us. On a trip to Mars, astronauts will be more isolated and confined than we can imagine. Sleep loss, circadian desynchronization, and work overload compound this issue and may lead to decreased performance, adverse health outcomes, and compromised mission objectives.
 To address this hazard, experts are developing methods for monitoring behavioral health and adapting/refining various tools and technologies for use in the spaceflight environment to detect and treat early risk factors. Research is also being conducted in workload and performance, light therapy for circadian alignment, phase shifting and alertness. Learn more about how NASA studies isolation and confinement:'), (1, 'Learn more about how NASA studies isolation and confinement:
@@ -60,7 +60,7 @@ Crew Health and Performance Exploration Analog (CHAPEA) is a series of analog mi
 ## Discover More Topics From NASA
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/hazard-distance-from-earth/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Distance From Earth', 'https://www.nasa.gov/hrp/hazard-distance-from-earth/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:34:19.053Z","chunks":4}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Distance From Earth', 'https://www.nasa.gov/hrp/hazard-distance-from-earth/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:40:34.157Z","chunks":4}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Instructions, new supplies, medical care, and more become increasingly challenging to receive from Earth as astronauts venture deeper into space.
 Mars is, on average, 140 million miles from Earth. Rather than a three-day lunar trip, astronauts bound for Mars would be leaving our planet for roughly three years.
 Given this distance, planning and self-sufficiency will be essential to successful missions to Mars. Facing a communication delay of up to 20 minutes one way, the possibility of equipment failures or medical emergencies, and a critical need to ration food and supplies, astronauts must be capable of confronting an array of situations with minimal support from teams on Earth. Learn more about how NASA studies the challenges that will arise as space missions venture farther from Earth:
@@ -79,7 +79,7 @@ The Crew Health and Performance Exploration Analog (CHAPEA) is a series of analo
 ## Discover More Topics From NASA
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/hazard-gravity-fields/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Gravity Fields', 'https://www.nasa.gov/hrp/hazard-gravity-fields/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:34:19.222Z","chunks":4}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Gravity Fields', 'https://www.nasa.gov/hrp/hazard-gravity-fields/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:40:34.357Z","chunks":4}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Floating weightlessly within a spacecraft can lead to dizziness, bone and muscle loss, vision issues, and more. Astronauts may also need time to adjust to new gravity fields after landing on the Moon or Mars before they conduct mission-critical tasks. Developing strategies that enable crew members to adapt quickly to different gravitational fields will be key to mission success.
 Astronauts will encounter three different gravity fields on a Mars mission. On the six-month trek between the planets, crews will be weightless. While living and working on Mars, crews will be in approximately one-third of Earth’s gravity. Finally, upon returning home, crews will have to readapt to Earth’s gravity.
 Switching from one gravity field to another is trickier than it sounds. The transition affects spatial orientation, head-eye and hand-eye coordination, balance, and locomotion, with some crew members experiencing space motion sickness.'), (1, 'Landing a spacecraft on Mars could be challenging as astronauts adjust to the gravity field of another celestial body. When shifting from weightlessness to gravity, astronauts may even experience lightheadedness and fainting.
@@ -100,7 +100,7 @@ In an episode of "Houston, We Have a Podcast," a NASA scientist describes how tr
 ## Discover More Topics From NASA
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/hazard-hostile-closed-environments/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Hostile/Closed Environments', 'https://www.nasa.gov/hrp/hazard-hostile-closed-environments/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:34:19.381Z","chunks":2}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Hazard: Hostile/Closed Environments', 'https://www.nasa.gov/hrp/hazard-hostile-closed-environments/', 'NASA Human Research Program', '2023-10-26', 'web_page', '{"fetched_at":"2026-11-14T18:40:34.749Z","chunks":2}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Maintaining a safe ecosystem inside a vehicle presents unique challenges, from ensuring optimal temperatures, pressures, and lighting, to reducing noise, monitoring microbial communities, and tracking immune responses.
 The ecosystem inside a spacecraft plays a big role in the daily life of an astronaut in space.
 Microbes can change characteristics in space, and micro-organisms that naturally live on the human body are transferred more easily from person to person in closed habitats, such as the space station. Stress hormone levels can elevate and the immune system can alter, which could lead to increased susceptibility to allergies or other illnesses. More research is needed into whether these changes pose serious risks to astronauts.
@@ -116,7 +116,7 @@ NASA''s Human Exploration Research Analog (HERA) is a unique 650-square-foot hab
 For more than 50 years, NASA’s Human Research Program (HRP) has studied what happens to the human body in space. Researchers…
 ## Discover More Topics From NASA')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/radiation/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Space Radiation', 'https://www.nasa.gov/hrp/radiation/', 'NASA Human Research Program', null, 'web_page', '{"fetched_at":"2026-11-14T18:34:19.550Z","chunks":4}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Space Radiation', 'https://www.nasa.gov/hrp/radiation/', 'NASA Human Research Program', null, 'web_page', '{"fetched_at":"2026-11-14T18:40:35.054Z","chunks":4}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'The Space Radiation Element (SRE) of NASA''s Human Research Program (HRP) seeks to characterize human health outcomes associated with space radiation exposure, helping the space agency build strategies that protect astronaut health and ensure safe human spaceflight.
 Astronauts will be exposed to increased levels of ionizing radiation on missions outside Earth''s protective atmosphere. SRE helps understand how this ionizing radiation affects the human body.
 See the risks of human spaceflight that the SRE investigate to help ensure the health and safety of astronauts in low-Earth orbit and beyond.
@@ -149,7 +149,7 @@ Human Health Countermeasures
 Research Operations & Integration
 Science dedicated to protecting the health and performance of astronauts in space.')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/risks/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Risks of Human Spaceflight', 'https://www.nasa.gov/hrp/risks/', 'NASA Human Research Program', null, 'web_page', '{"fetched_at":"2026-11-14T18:34:19.707Z","chunks":7}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Risks of Human Spaceflight', 'https://www.nasa.gov/hrp/risks/', 'NASA Human Research Program', null, 'web_page', '{"fetched_at":"2026-11-14T18:40:35.255Z","chunks":7}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'NASA''s Human Research Program (HRP) seeks to understand specific risks associated with the hazards of human spaceflight. Learn more about these risks below.
 NASA''s Human Research Program has identified several specific risks to human health associated with five hazards of spaceflight. The effects of these risks vary depending on whether humans are traveling to low Earth orbit, the Moon, or Mars. Learn more about each identified risk.
 For more background, explore the five hazards of human spaceflight .
@@ -187,7 +187,7 @@ During landing activities, crews risk getting injured. Understanding the likelih
 5 Hazards of Human Spaceflight
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/hrp/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Human Research Program', 'https://www.nasa.gov/hrp/', 'NASA Human Research Program', '2023-06-21', 'web_page', '{"fetched_at":"2026-11-14T18:34:19.870Z","chunks":5}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Human Research Program', 'https://www.nasa.gov/hrp/', 'NASA Human Research Program', '2023-06-21', 'web_page', '{"fetched_at":"2026-11-14T18:40:35.591Z","chunks":5}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'HRP uses research to develop methods to protect the health and performance of astronauts in space. With the goal of traveling to the Moon, Mars and beyond, HRP is using ground research facilities, the International Space Station, Artemis missions, and analog environments to enable cutting-edge science.
 HRP offers funding, collaboration, and partnership opportunities to those interested in the future of human spaceflight.
 ## Join Us at the 2027 Investigators'' Workshop
@@ -236,7 +236,7 @@ NASA’s Artemis II Moon Mission Research Continues on Earth
 ## Discover More Topics From NASA
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/humans-in-space/the-human-body-in-space/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('The Human Body in Space', 'https://www.nasa.gov/humans-in-space/the-human-body-in-space/', 'NASA', '2021-02-02', 'web_page', '{"fetched_at":"2026-11-14T18:34:20.031Z","chunks":22}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('The Human Body in Space', 'https://www.nasa.gov/humans-in-space/the-human-body-in-space/', 'NASA', '2021-02-02', 'web_page', '{"fetched_at":"2026-11-14T18:40:35.986Z","chunks":22}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Isolation and Confinement
 Hostile/Closed Environments
 For more than 50 years, NASA’s Human Research Program (HRP) has studied what happens to the human body in space. Researchers are using what they learn to design procedures, devices, and strategies to keep astronauts safe and healthy throughout their missions.
@@ -281,7 +281,7 @@ NASA''s Human Research Program , or HRP, pursues the best methods and technologi
 For a 508 Compliant PDF of this post, follow this link.
 Space Station Research and Technology')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/humans-in-space/space-radiation-is-risky-business-for-the-human-body/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Space Radiation is Risky Business for the Human Body', 'https://www.nasa.gov/humans-in-space/space-radiation-is-risky-business-for-the-human-body/', 'NASA', '2017-09-19', 'web_page', '{"fetched_at":"2026-11-14T18:34:20.184Z","chunks":4}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Space Radiation is Risky Business for the Human Body', 'https://www.nasa.gov/humans-in-space/space-radiation-is-risky-business-for-the-human-body/', 'NASA', '2017-09-19', 'web_page', '{"fetched_at":"2026-11-14T18:40:36.247Z","chunks":4}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'Communications Strategist
 Former HRP Communications Lead
 While people protect their eyes from the sun’s radiation during a solar eclipse, NASA’s Human Research Program (HRP) is working to protect the whole human body from radiation in space. Space radiation is dangerous and one of the primary health risks for astronauts.
@@ -294,7 +294,7 @@ NASA''s Human Research Program , or HRP, pursues the best methods and technologi
 ## NASA''s ISAM State of Play: The Industry Standard for Space Servicing, Assembly, and Manufacturing
 ## Discover More Topics From NASA')) as v(i, c);
 delete from public.nasa_sources where source_url = 'https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/';
-with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Why Space Radiation Matters', 'https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/', 'NASA', '2017-04-13', 'web_page', '{"fetched_at":"2026-11-14T18:34:20.334Z","chunks":9}') returning id)
+with s as (insert into public.nasa_sources (title, source_url, publisher, published_at, document_type, metadata_json) values ('Why Space Radiation Matters', 'https://www.nasa.gov/missions/analog-field-testing/why-space-radiation-matters/', 'NASA', '2017-04-13', 'web_page', '{"fetched_at":"2026-11-14T18:40:36.623Z","chunks":9}') returning id)
 insert into public.nasa_source_chunks (source_id, chunk_index, content) select s.id, v.i, v.c from s, (values (0, 'How much Space Radiation are Astronauts Exposed to?
 Where Does Radiation Come From?
 What is Non-Ionizing versus Ionizing Radiation?
