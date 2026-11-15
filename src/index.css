@@ -1,26 +1,38 @@
 @import 'tailwindcss';
 
-/* Дизайн-токены StarTime+: тёмная тема «центр управления полётами». */
+/* Дизайн-токены StarTime+: стиль «Mission Control» в духе инженерной графики NASA.
+   Палитра: космический чёрный + NASA-синий (#0B3D91) + сигнальный красный (#FC3D21).
+   Логотипы и эмблемы NASA не используются (правила Space Apps Challenge). */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'IBM Plex Sans Condensed', 'IBM Plex Sans', ui-sans-serif, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  --color-space-950: #050816;
-  --color-space-900: #0a1024;
-  --color-space-850: #0e1530;
-  --color-space-800: #131c3d;
-  --color-space-700: #1e2a55;
-  --color-space-600: #2c3b72;
-  --color-ink: #e6ebff;
-  --color-ink-dim: #9aa6cf;
-  --color-ink-mute: #6b77a3;
-  --color-accent: #38bdf8;
-  --color-accent-2: #a78bfa;
-  --color-ok: #34d399;
-  --color-low: #60a5fa;
-  --color-medium: #fbbf24;
-  --color-high: #f97316;
-  --color-critical: #ef4444;
+  --color-space-950: #04060c;
+  --color-space-900: #080d19;
+  --color-space-850: #0c1322;
+  --color-space-800: #111a2e;
+  --color-space-700: #1c2944;
+  --color-space-600: #2b3c62;
+  --color-ink: #f1f4f9;
+  --color-ink-dim: #a5b0c6;
+  --color-ink-mute: #6d7891;
+  --color-accent: #4d8dff;
+  --color-accent-2: #b9c4da;
+  --color-nasa-blue: #0b3d91;
+  --color-nasa-red: #fc3d21;
+  --color-ok: #2fd08a;
+  --color-low: #5aa2ff;
+  --color-medium: #ffc233;
+  --color-high: #ff8a1f;
+  --color-critical: #ff3b30;
+
+  /* Строгие, почти прямые углы — как у пультов управления */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
 }
 
 html,
@@ -35,7 +47,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
-/* Лёгкий звёздный фон — не мешает читаемости */
+/* Фон: инженерная сетка + свечение «горизонта Земли» + редкие звёзды */
 body::before {
   content: '';
   position: fixed;
@@ -43,30 +55,78 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(1px 1px at 12% 18%, #ffffff55 50%, transparent 51%),
-    radial-gradient(1px 1px at 72% 34%, #ffffff40 50%, transparent 51%),
-    radial-gradient(1px 1px at 38% 78%, #ffffff35 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 88% 82%, #ffffff40 50%, transparent 51%),
-    radial-gradient(1px 1px at 55% 8%, #ffffff30 50%, transparent 51%),
-    radial-gradient(900px 500px at 85% -10%, #1e3a8a33, transparent 70%),
-    radial-gradient(700px 500px at -10% 110%, #4c1d9533, transparent 70%);
+    radial-gradient(1px 1px at 12% 18%, #ffffff50 50%, transparent 51%),
+    radial-gradient(1px 1px at 72% 34%, #ffffff3a 50%, transparent 51%),
+    radial-gradient(1px 1px at 38% 78%, #ffffff30 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 88% 82%, #ffffff3a 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 8%, #ffffff2a 50%, transparent 51%),
+    radial-gradient(120% 60% at 50% 135%, #0b3d9166, transparent 60%),
+    linear-gradient(#ffffff06 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff06 1px, transparent 1px);
+  background-size: auto, auto, auto, auto, auto, auto, 48px 48px, 48px 48px;
 }
 #root {
   position: relative;
   z-index: 1;
 }
 
+/* Панель: тонкая рамка + уголки-«визиры» */
 .panel {
-  background: color-mix(in oklab, var(--color-space-900) 88%, transparent);
+  position: relative;
+  background: color-mix(in oklab, var(--color-space-900) 92%, transparent);
   border: 1px solid var(--color-space-700);
-  border-radius: 14px;
+  border-radius: 3px;
 }
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  border-color: var(--color-accent);
+  opacity: 0.55;
+}
+.panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
 .label-caps {
+  font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-ink-mute);
   font-weight: 600;
+}
+/* Заголовок карточки: красный маркер перед подписью */
+.label-tick::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  background: var(--color-nasa-red);
+}
+.display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+/* Сине-красная полоса — фирменный акцент шапки */
+.flag-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-nasa-red) 0 18%, var(--color-nasa-blue) 18% 100%);
 }
 :focus-visible {
   outline: 2px solid var(--color-accent);
@@ -78,5 +138,12 @@ body::before {
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-space-700);
-  border-radius: 8px;
+  border-radius: 2px;
+}
+@media print {
+  body::before,
+  .panel::before,
+  .panel::after {
+    display: none;
+  }
 }

@@ -1,6 +1,6 @@
 // Общий layout: боковая навигация (группы MAIN / HEALTH / AI / MISSION / SYSTEM),
 // верхняя панель с миссией и пультом симулятора. На телефоне меню выезжает.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import {
   Activity, BedDouble, Bell, Bot, FileText, Gauge, LogOut, Menu, Radiation, Rocket, Settings, ShieldAlert, User, Users, X,
@@ -35,13 +35,12 @@ export function AppLayout() {
   const { mission, alerts, profile, signOut, mode } = useData()
   const [open, setOpen] = useState(false)
   const active = alerts.filter((a) => a.status === 'active').length
-  const day = mission ? Math.max(1, Math.ceil((Date.now() - new Date(mission.start_date).getTime()) / 86400_000)) : null
 
   const nav = (
     <nav className="flex flex-col gap-5 p-4" aria-label="Основная навигация">
       {NAV.map((g) => (
         <div key={g.group}>
-          <div className="label-caps mb-2 px-2">{g.group}</div>
+          <div className="label-caps mb-2 px-2 text-[10px]">{g.group}</div>
           <ul className="flex flex-col gap-0.5">
             {g.items.map(({ to, label, icon: Icon }) => (
               <li key={to}>
@@ -50,8 +49,8 @@ export function AppLayout() {
                   end={to === '/'}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition ${
-                      isActive ? 'bg-accent/12 text-accent' : 'text-ink-dim hover:bg-space-800 hover:text-ink'
+                    `flex items-center gap-2.5 border-l-2 px-2.5 py-2 text-sm transition ${
+                      isActive ? 'border-nasa-red bg-nasa-blue/30 font-medium text-ink' : 'border-transparent text-ink-dim hover:bg-space-800 hover:text-ink'
                     }`
                   }
                 >
@@ -104,21 +103,23 @@ export function AppLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-space-700 bg-space-950/85 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-space-700 bg-space-950/90 backdrop-blur">
+          <div className="flag-stripe" aria-hidden />
           <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
             <button onClick={() => setOpen(true)} className="p-1 text-ink-dim lg:hidden" aria-label="Открыть меню">
               <Menu size={22} />
             </button>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold">
+              <div className="display truncate text-sm font-semibold">
                 {mission ? `${mission.mission_code} · ${mission.name}` : 'Миссия не назначена'}
               </div>
-              <div className="font-mono text-xs text-ink-mute">
-                {day ? `MET: день ${day}` : '—'} · {profile?.display_name ?? '…'} · {new Date().toLocaleDateString('ru-RU')}
+              <div className="truncate font-mono text-xs text-ink-mute">
+                {profile?.display_name ?? '…'} · {new Date().toLocaleDateString('ru-RU')}
               </div>
             </div>
             <SimulatorPanel />
           </div>
+          <Telemetry start={mission?.start_date} active={active} />
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
           <Outlet />
@@ -128,19 +129,51 @@ export function AppLayout() {
   )
 }
 
+/** Строка телеметрии: время миссии (MET), UTC, статус связи и предупреждений. Тикает раз в секунду. */
+function Telemetry({ start, active }: { start?: string; active: number }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0')
+  let met = '—'
+  if (start) {
+    const s = Math.max(0, Math.floor((now - new Date(start).getTime()) / 1000))
+    met = `${pad(Math.floor(s / 86400), 3)}:${pad(Math.floor((s % 86400) / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`
+  }
+  const utc = new Date(now).toISOString().slice(11, 19)
+  const Item = ({ k, v, cls = 'text-ink' }: { k: string; v: string; cls?: string }) => (
+    <span className="whitespace-nowrap">
+      <span className="text-ink-mute">{k}</span> <span className={cls}>{v}</span>
+    </span>
+  )
+  return (
+    <div className="flex gap-x-6 gap-y-1 overflow-x-auto border-t border-space-700/70 bg-space-900/70 px-4 py-1.5 font-mono text-[11px] tracking-wider sm:px-6">
+      <Item k="MET" v={met} cls="text-accent" />
+      <Item k="UTC" v={utc} />
+      <Item k="LINK" v="NOMINAL" cls="text-ok" />
+      <Item k="ALERTS" v={active ? String(active) : 'NONE'} cls={active ? 'text-high' : 'text-ok'} />
+      <Item k="DATA" v="SIMULATED" cls="text-accent-2" />
+    </div>
+  )
+}
+
+/** Собственная эмблема-«нашивка» миссии (не логотип NASA). */
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5 px-5 py-5">
-      <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
-        <circle cx="16" cy="16" r="15" fill="#0e1530" stroke="#2c3b72" />
-        <circle cx="16" cy="16" r="5" fill="#38bdf8" />
-        <ellipse cx="16" cy="16" rx="13" ry="5" fill="none" stroke="#a78bfa" strokeWidth="1.6" transform="rotate(-25 16 16)" />
+    <div className="flex items-center gap-3 border-b border-space-700 px-5 py-5">
+      <svg viewBox="0 0 32 32" className="h-10 w-10 shrink-0" aria-hidden>
+        <circle cx="16" cy="16" r="15" fill="#0b3d91" stroke="#4d8dff" strokeOpacity=".5" />
+        <ellipse cx="16" cy="16" rx="14" ry="5" fill="none" stroke="#fff" strokeWidth="1.3" transform="rotate(-28 16 16)" />
+        <path d="M16 8l1.9 5.6H24l-4.9 3.6 1.9 5.8-5-3.6-5 3.6 1.9-5.8L8 13.6h6.1z" fill="#fff" />
+        <circle cx="25.5" cy="9.5" r="2" fill="#fc3d21" />
       </svg>
       <div>
-        <div className="text-lg font-bold leading-none tracking-tight">
-          StarTime<span className="text-accent">+</span>
+        <div className="display text-lg font-bold leading-none tracking-[0.08em]">
+          StarTime<span className="text-nasa-red">+</span>
         </div>
-        <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-ink-mute">Crew Health</div>
+        <div className="mt-1.5 font-mono text-[9.5px] uppercase tracking-[0.22em] text-ink-mute">Crew Health · Mission Ops</div>
       </div>
     </div>
   )

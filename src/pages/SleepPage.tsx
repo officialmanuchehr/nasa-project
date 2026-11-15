@@ -43,12 +43,12 @@ export default function SleepPage() {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={rows} margin={{ top: 6, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid stroke="#1e2a55" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="day" stroke="#6b77a3" fontSize={11} />
-              <YAxis stroke="#6b77a3" fontSize={11} unit="ч" domain={[0, 10]} />
-              <Tooltip contentStyle={{ background: '#0a1024', border: '1px solid #2c3b72', borderRadius: 10, fontSize: 12 }} formatter={(v) => [`${v} ч`, 'Сон']} cursor={{ fill: '#1e2a5555' }} />
-              <ReferenceLine y={Number((baseline / 60).toFixed(2))} stroke="#a78bfa" strokeDasharray="5 4" />
-              <Bar dataKey="h" fill="#38bdf8" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <CartesianGrid stroke="#1c2944" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="day" stroke="#6d7891" fontSize={11} />
+              <YAxis stroke="#6d7891" fontSize={11} unit="ч" domain={[0, 10]} />
+              <Tooltip contentStyle={{ background: '#080d19', border: '1px solid #2b3c62', borderRadius: 10, fontSize: 12 }} formatter={(v) => [`${v} ч`, 'Сон']} cursor={{ fill: '#1c294455' }} />
+              <ReferenceLine y={Number((baseline / 60).toFixed(2))} stroke="#b9c4da" strokeDasharray="5 4" />
+              <Bar dataKey="h" fill="#4d8dff" radius={[4, 4, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>

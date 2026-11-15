@@ -8,7 +8,7 @@ export function Card({ title, action, children, className = '' }: { title?: Reac
     <section className={`panel p-4 sm:p-5 ${className}`}>
       {(title || action) && (
         <header className="mb-3 flex items-center justify-between gap-3">
-          {title && <h2 className="label-caps">{title}</h2>}
+          {title && <h2 className="label-caps label-tick">{title}</h2>}
           {action}
         </header>
       )}
@@ -74,7 +74,7 @@ export function Button({
   className?: string
 }) {
   const v = {
-    primary: 'bg-accent text-space-950 hover:bg-accent/90',
+    primary: 'bg-nasa-blue text-white border border-accent/50 hover:bg-accent hover:text-space-950',
     ghost: 'border border-space-600 text-ink hover:bg-space-800',
     danger: 'border border-critical/50 text-critical hover:bg-critical/10',
   }[variant]
@@ -83,7 +83,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${v} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 font-mono text-xs font-semibold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-50 ${v} ${className}`}
     >
       {children}
     </button>
@@ -98,7 +98,8 @@ export function PageHeader({ title, subtitle, right }: { title: string; subtitle
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+        <div className="mb-1.5 h-[3px] w-10 bg-nasa-red" aria-hidden />
+        <h1 className="display text-2xl font-semibold sm:text-3xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-ink-dim">{subtitle}</p>}
       </div>
       {right}
